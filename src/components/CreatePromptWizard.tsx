@@ -25,6 +25,7 @@ import {
   uploadAccepts,
   wizardQuestions,
 } from "../../lib/mock/wizard";
+import { parseFileToText, SupportedUploadType } from "../../lib/fileParsers";
 
 interface CreatePromptWizardProps {
   onNavigate: (view: string, data?: any) => void;
@@ -35,6 +36,8 @@ interface UploadedFile {
   size: number;
   type: string;
   content: string;
+  format: SupportedUploadType;
+  warnings: string[];
 }
 
 export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
@@ -51,6 +54,8 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
   const [predefinedFormat, setPredefinedFormat] = useState("");
   const [documentStyle, setDocumentStyle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   // Step 3: Clarifying Q&A
   const [aiResponses, setAiResponses] = useState<string[]>([]);
@@ -85,24 +90,43 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
   };
 
   // Step 2: Handle file upload
+  const processFile = async (file: File) => {
+    setIsProcessingFile(true);
+    setUploadError(null);
+    setUploadedFile(null);
+    setCompletedSteps(prev => {
+      const newSet = new Set(prev);
+      newSet.delete("step2");
+      return newSet;
+    });
+    try {
+      const parsed = await parseFileToText(file);
+      setUploadedFile({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        content: parsed.text,
+        format: parsed.type,
+        warnings: parsed.warnings,
+      });
+      completeStep("step2");
+      if (!openSections.includes("step3")) {
+        setOpenSections(prev => [...prev, "step3"]);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
+      setUploadError(message);
+      setUploadedFile(null);
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setUploadedFile({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          content: content,
-        });
-        completeStep("step2");
-        if (!openSections.includes("step3")) {
-          setOpenSections(prev => [...prev, "step3"]);
-        }
-      };
-      reader.readAsText(file);
+      void processFile(file);
+      event.target.value = "";
     }
   };
 
@@ -115,21 +139,7 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setUploadedFile({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          content: content,
-        });
-        completeStep("step2");
-        if (!openSections.includes("step3")) {
-          setOpenSections(prev => [...prev, "step3"]);
-        }
-      };
-      reader.readAsText(file);
+      void processFile(file);
     }
   };
 
@@ -343,7 +353,7 @@ ${aiResponses
                       ref={fileInputRef}
                       type="file"
                       onChange={handleFileUpload}
-                      accept={uploadAccepts.extensions.join(",")}
+                      accept={[...uploadAccepts.extensions, ...uploadAccepts.mimeTypes].join(",")}
                       className="hidden"
                     />
                     {!uploadedFile ? (
@@ -360,6 +370,16 @@ ${aiResponses
                         <p className="text-xs text-muted-foreground mt-1">
                           지원 형식: .txt, .doc, .docx, .pdf
                         </p>
+                        {isProcessingFile && (
+                          <p className="text-xs text-muted-foreground mt-3" aria-live="polite">
+                            파일을 처리하는 중입니다...
+                          </p>
+                        )}
+                        {uploadError && (
+                          <p className="text-xs text-red-500 mt-3" role="alert">
+                            {uploadError}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <div className="bg-muted rounded-lg p-4">
@@ -369,7 +389,7 @@ ${aiResponses
                             <div>
                               <p className="text-sm">{uploadedFile.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                {(uploadedFile.size / 1024).toFixed(1)} KB
+                                {(uploadedFile.size / 1024).toFixed(1)} KB · {uploadedFile.format.toUpperCase()}
                               </p>
                             </div>
                           </div>
@@ -378,16 +398,24 @@ ${aiResponses
                             size="sm"
                             onClick={() => {
                               setUploadedFile(null);
+                              setUploadError(null);
                               setCompletedSteps(prev => {
                                 const newSet = new Set(prev);
                                 newSet.delete("step2");
-                              return newSet;
-                            });
-                          }}
+                                return newSet;
+                              });
+                            }}
                           >
                             제거
                           </Button>
                         </div>
+                        {uploadedFile.warnings.length > 0 && (
+                          <div className="mt-3 text-xs text-muted-foreground space-y-1">
+                            {uploadedFile.warnings.map((warning, index) => (
+                              <p key={index}>⚠ {warning}</p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

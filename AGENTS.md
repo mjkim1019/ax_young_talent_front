@@ -31,7 +31,7 @@
 
 ## 기존 코드와의 정합성 유지
 - **템플릿 정렬**: `TemplatesPage.tsx`에 ISO 타임스탬프 필드(예: `lastUpdatedAt`)를 추가하고, 정렬 유틸(`lib/sorting.ts`)을 만들어 "Recently Updated" 옵션이 실제 최신순으로 동작하게 합니다. 표시용 문자열은 별도 포맷터에서 생성합니다.
-- **파일 업로드**: `CreatePromptWizard.tsx`는 `FileReader.readAsText`만 사용합니다. 텍스트만 지원한다면 `accept=".txt"`와 안내 문구를 맞추고, `.doc/.pdf`도 필요하다면 ArrayBuffer 처리 및 파싱 로직을 추가한 뒤 QA를 진행하세요.
+- **파일 업로드**: `CreatePromptWizard.tsx`는 `lib/fileParsers.ts`를 통해 `.txt/.doc/.docx/.pdf`를 파싱합니다. 파서가 실패하면 한국어 경고를 노출하므로, 신규 포맷을 추가할 때는 동일 패턴으로 ArrayBuffer 파서를 확장하고 QA 체크리스트를 갱신하세요.
 - **라우트 정의**: PRD 기준 페이지(`/`, `/output-options`, `/qa`, `/prompt-preview`, `/shared-gallery`, `/final`)를 Next.js App Router 세그먼트로 구성합니다. 각 페이지 컴포넌트는 필요한 mock 데이터를 직접 임포트합니다.
 
 ## 협업 및 커뮤니케이션 노트
@@ -50,4 +50,3 @@
 - [ ] 템플릿 정렬 및 파일 업로드 시나리오 수동 검증
 - [ ] MUI/Emotion 스타일 가이드 및 접근성 준수
 - [ ] 타입 안정성 및 린트 경고 없음
-

@@ -43,7 +43,7 @@ src/
 
 ### 시나리오 1 – 인수인계 자료 생성
 1. **작업 입력**: HomePage에서 목적과 설명 작성
-2. **파일/옵션 선택**: CreatePromptWizard Step 2에서 샘플 파일 업로드(`FileReader.readAsText`) 또는 선호 포맷 선택
+2. **파일/옵션 선택**: CreatePromptWizard Step 2에서 `lib/fileParsers.ts`로 `.txt/.doc/.docx/.pdf` 텍스트 추출 후 선호 포맷 선택
 3. **AI 질문**: Step 3에서 고정 `aiQuestions` 배열에 따라 질의 → 사용자가 답변 입력
 4. **프롬프트 생성**: Step 4에서 목적/옵션/질문 응답을 조합해 최종 프롬프트 문자열 생성 및 편집
 5. **결과 전달**: 사용자 복사 후 FeedbackPage로 이동하여 개선 의견 남김
@@ -90,7 +90,7 @@ src/
 
 ## Mock 데이터 & 정렬 규칙
 - 현재 Mock은 각 컴포넌트 내부 상수(`aiQuestions`, 템플릿 배열 등)로 선언되어 있음.
-- 파일 업로드는 텍스트 기반(`accept=".txt"`), 다른 포맷 지원 시 ArrayBuffer 파서 추가 필요.
+- 파일 업로드는 `lib/fileParsers.ts`에서 텍스트, DOC/DOCX, PDF를 ArrayBuffer 기반으로 파싱합니다.
 - 템플릿 정렬 옵션은 존재하지만 ISO 타임스탬프 필드/유틸이 미구현 → `lib/sorting.ts` 도입 필요.
 
 ### Mock Data 예시 (현 구조 기반)
@@ -130,7 +130,7 @@ export const mockScenarios = {
 | 기능 | 현 상태 | 비고 |
 |------|---------|------|
 | 작업 목적 입력 | O | HomePage에서 입력 후 `onNavigate` |
-| 옵션/파일 업로드 | O | 텍스트 파일 읽기 + Select UI |
+| 옵션/파일 업로드 | O | `.txt/.doc/.docx/.pdf` 파싱 + Select UI |
 | AI 질의응답 | O | 기본 배열 기반, 브랜칭 없음 |
 | 프롬프트 생성/편집 | O | Step 4에서 문자열 조합 + 편집 모드 |
 | 공유 템플릿 갤러리 | O | TemplatesPage → 상세 → 마법사 연동 |
