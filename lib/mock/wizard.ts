@@ -6,19 +6,19 @@ export interface WizardQuestion {
 export const wizardQuestions: WizardQuestion[] = [
   {
     id: "document-type",
-    text: "What specific type of document or content should this prompt generate?",
+    text: "이 프롬프트가 생성해야 하는 문서나 콘텐츠 유형은 무엇인가요?",
   },
   {
     id: "audience",
-    text: "Who is the target audience for the output?",
+    text: "결과물을 사용할 대상은 누구인가요?",
   },
   {
     id: "tone",
-    text: "What tone should the output have? (formal, casual, persuasive, etc.)?",
+    text: "원하는 톤은 무엇인가요? (격식체, 캐주얼, 설득 등)",
   },
   {
     id: "constraints",
-    text: "Are there any special requirements or constraints I should know about?",
+    text: "알려야 할 특별한 요구 사항이나 제약이 있나요?",
   },
 ];
 
@@ -28,10 +28,10 @@ export interface PredefinedFormatOption {
 }
 
 export const predefinedFormats: PredefinedFormatOption[] = [
-  { id: "email", label: "Email" },
-  { id: "report", label: "Report" },
-  { id: "summary", label: "Summary" },
-  { id: "presentation", label: "Presentation" },
+  { id: "email", label: "이메일" },
+  { id: "report", label: "보고서" },
+  { id: "summary", label: "요약" },
+  { id: "presentation", label: "프레젠테이션" },
 ];
 
 export interface DocumentStyleOption {
@@ -40,11 +40,11 @@ export interface DocumentStyleOption {
 }
 
 export const companyDocumentStyles: DocumentStyleOption[] = [
-  { id: "professional", label: "Professional Report" },
-  { id: "technical", label: "Technical Documentation" },
-  { id: "marketing", label: "Marketing Copy" },
-  { id: "internal", label: "Internal Memo" },
-  { id: "executive", label: "Executive Summary" },
+  { id: "professional", label: "전문 보고서" },
+  { id: "technical", label: "기술 문서" },
+  { id: "marketing", label: "마케팅 카피" },
+  { id: "internal", label: "사내 메모" },
+  { id: "executive", label: "임원용 요약" },
 ];
 
 export const uploadAccepts = {

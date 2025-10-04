@@ -192,25 +192,25 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     let outputContext = "";
     
     if (outputMethod === "upload" && uploadedFile) {
-      outputContext = `Based on the uploaded sample file: ${uploadedFile.name}`;
+      outputContext = `첨부한 샘플 파일 기준: ${uploadedFile.name}`;
     } else if (outputMethod === "predefined") {
       const formatLabel = predefinedFormats.find((option) => option.id === predefinedFormat)?.label ?? predefinedFormat;
-      outputContext = `Format: ${formatLabel}`;
+      outputContext = `출력 형식: ${formatLabel}`;
     } else if (outputMethod === "company") {
       const styleLabel = companyDocumentStyles.find((style) => style.id === documentStyle)?.label ?? documentStyle;
-      outputContext = `Style: ${styleLabel}`;
+      outputContext = `문서 스타일: ${styleLabel}`;
     }
 
-    const prompt = `Generate content for: ${purpose}
+    const prompt = `요청 주제: ${purpose}
 
 ${outputContext}
 
-Context from clarifying questions:
+추가 질문 응답:
 ${aiResponses
       .map((response, i) => `${wizardQuestions[i]?.text ?? ""}: ${response}`)
       .join("\n")}
 
-Please ensure the output is well-structured, clear, and meets the specified requirements.`;
+위 정보에 맞춰 구조화되고 명확한 결과물을 작성하세요.`;
     
     setGeneratedPrompt(prompt);
     completeStep("step4");
@@ -226,11 +226,11 @@ Please ensure the output is well-structured, clear, and meets the specified requ
         {/* Header */}
         <div className="mb-8">
           <Button variant="ghost" onClick={() => onNavigate('home')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
+            <ArrowLeft className="h-4 w-4 mr-2" /> 홈으로 돌아가기
           </Button>
-          <h1>Create New Prompt</h1>
+          <h1>새 프롬프트 만들기</h1>
           <p className="text-muted-foreground mb-4">
-            Complete each section below to build your custom prompt
+            아래 각 섹션을 완료해 맞춤형 프롬프트를 구성하세요.
           </p>
           <Progress value={progress} className="h-2" />
         </div>
@@ -258,18 +258,18 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                   )}
                 </div>
                 <div className="text-left">
-                  <h3>Step 1: Purpose & Context</h3>
+                  <h3>1단계: 목적과 배경</h3>
                   <p className="text-sm text-muted-foreground">
-                    {completedSteps.has("step1") ? "Completed" : "Describe what you want your prompt to accomplish"}
+                    {completedSteps.has("step1") ? "완료됨" : "프롬프트로 달성하려는 목표를 작성하세요."}
                   </p>
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <div className="space-y-4">
-                <Label>What is the purpose of your prompt?</Label>
+                <Label>프롬프트의 목적은 무엇인가요?</Label>
                 <Textarea
-                  placeholder="Example: Generate professional email responses to customer inquiries..."
+                  placeholder="예: 고객 문의에 대한 전문적인 이메일 답장을 작성하세요..."
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   onBlur={handlePurposeComplete}
@@ -277,7 +277,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                 />
                 {purpose.trim() && (
                   <div className="text-sm text-muted-foreground">
-                    ✓ Purpose defined - you can now proceed to Step 2
+                    ✓ 목적이 정의되었습니다. 2단계로 진행하세요.
                   </div>
                 )}
               </div>
@@ -300,9 +300,9 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                   )}
                 </div>
                 <div className="text-left">
-                  <h3>Step 2: Desired Output</h3>
+                  <h3>2단계: 원하는 출력</h3>
                   <p className="text-sm text-muted-foreground">
-                    {completedSteps.has("step2") ? "Completed" : "Specify the format and style of your desired output"}
+                    {completedSteps.has("step2") ? "완료됨" : "원하는 출력 형식과 스타일을 지정하세요."}
                   </p>
                 </div>
               </div>
@@ -310,26 +310,26 @@ Please ensure the output is well-structured, clear, and meets the specified requ
             <AccordionContent className="px-6 pb-6">
               <div className="space-y-6">
                 <div>
-                  <Label className="mb-3 block">Choose output method:</Label>
+                  <Label className="mb-3 block">출력 방식을 선택하세요:</Label>
                   <RadioGroup value={outputMethod} onValueChange={handleOutputMethodChange}>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="upload" id="upload" />
                         <Label htmlFor="upload" className="flex items-center space-x-2 cursor-pointer">
                           <Upload className="h-4 w-4" />
-                          <span>Upload sample file</span>
+                          <span>샘플 파일 업로드</span>
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="predefined" id="predefined" />
                         <Label htmlFor="predefined" className="cursor-pointer">
-                          Choose from predefined options
+                          기본 옵션에서 선택
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="company" id="company" />
                         <Label htmlFor="company" className="cursor-pointer">
-                          Select from company's standard document style
+                          회사 표준 문서 스타일 선택
                         </Label>
                       </div>
                     </div>
@@ -355,10 +355,10 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                       >
                         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          Drag and drop a sample file here, or click to browse
+                          샘플 파일을 끌어다 놓거나 클릭해서 업로드하세요.
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Supported formats: .txt, .doc, .docx, .pdf
+                          지원 형식: .txt, .doc, .docx, .pdf
                         </p>
                       </div>
                     ) : (
@@ -381,11 +381,11 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                               setCompletedSteps(prev => {
                                 const newSet = new Set(prev);
                                 newSet.delete("step2");
-                                return newSet;
-                              });
-                            }}
+                              return newSet;
+                            });
+                          }}
                           >
-                            Remove
+                            제거
                           </Button>
                         </div>
                       </div>
@@ -396,7 +396,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                 {/* Predefined Options */}
                 {outputMethod === "predefined" && (
                   <div>
-                    <Label className="text-sm mb-2 block">Choose format:</Label>
+                    <Label className="text-sm mb-2 block">출력 형식 선택:</Label>
                     <RadioGroup value={predefinedFormat} onValueChange={handlePredefinedFormatChange}>
                       <div className="space-y-2">
                         {predefinedFormats.map((option) => (
@@ -415,10 +415,10 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                 {/* Company Standards */}
                 {outputMethod === "company" && (
                   <div>
-                    <Label htmlFor="style-select" className="text-sm mb-2 block">Document style:</Label>
+                    <Label htmlFor="style-select" className="text-sm mb-2 block">문서 스타일:</Label>
                     <Select value={documentStyle} onValueChange={handleDocumentStyleChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select document style" />
+                        <SelectValue placeholder="문서 스타일을 선택하세요" />
                       </SelectTrigger>
                       <SelectContent>
                         {companyDocumentStyles.map((style) => (
@@ -433,7 +433,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
 
                 {completedSteps.has("step2") && (
                   <div className="text-sm text-muted-foreground">
-                    ✓ Output format selected - you can now proceed to Step 3
+                    ✓ 출력 방식이 선택되었습니다. 3단계로 진행하세요.
                   </div>
                 )}
               </div>
@@ -456,9 +456,9 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                   )}
                 </div>
                 <div className="text-left">
-                  <h3>Step 3: Clarifying Q&A</h3>
+                  <h3>3단계: 추가 질문</h3>
                   <p className="text-sm text-muted-foreground">
-                    {completedSteps.has("step3") ? "All questions answered" : "Answer AI questions to refine your prompt"}
+                    {completedSteps.has("step3") ? "모든 질문에 응답했습니다." : "AI 질문에 답해 프롬프트를 구체화하세요."}
                   </p>
                 </div>
               </div>
@@ -500,7 +500,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                     </div>
                     <div className="flex items-end space-x-3">
                       <Textarea
-                        placeholder="Enter your response..."
+                        placeholder="답변을 입력하세요..."
                         value={userResponse}
                         onChange={(e) => setUserResponse(e.target.value)}
                         className="flex-1"
@@ -519,8 +519,8 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                       <CheckCircle className="h-6 w-6 text-green-600" />
                     </div>
-                    <p className="text-sm text-muted-foreground">All questions answered!</p>
-                    <p className="text-sm text-muted-foreground mt-1">✓ You can now proceed to Step 4</p>
+                    <p className="text-sm text-muted-foreground">모든 질문에 답했습니다!</p>
+                    <p className="text-sm text-muted-foreground mt-1">✓ 이제 4단계로 이동하세요.</p>
                   </div>
                 )}
               </div>
@@ -543,9 +543,9 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                   )}
                 </div>
                 <div className="text-left">
-                  <h3>Step 4: Final Prompt</h3>
+                  <h3>4단계: 최종 프롬프트</h3>
                   <p className="text-sm text-muted-foreground">
-                    {completedSteps.has("step4") ? "Prompt ready for use" : "Review and edit your generated prompt"}
+                    {completedSteps.has("step4") ? "프롬프트가 준비되었습니다." : "생성된 프롬프트를 검토하고 수정하세요."}
                   </p>
                 </div>
               </div>
@@ -555,7 +555,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                 {generatedPrompt ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <Label>Your Generated Prompt</Label>
+                      <Label>생성된 프롬프트</Label>
                       <Button
                         variant="outline"
                         size="sm"
@@ -564,12 +564,12 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                         {isEditingPrompt ? (
                           <>
                             <Check className="h-4 w-4 mr-2" />
-                            Done Editing
+                            편집 완료
                           </>
                         ) : (
                           <>
                             <Edit3 className="h-4 w-4 mr-2" />
-                            Edit
+                            편집
                           </>
                         )}
                       </Button>
@@ -582,17 +582,17 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                     />
                     <div className="flex justify-end space-x-2">
                       <Button variant="outline" onClick={() => onNavigate('home')}>
-                        Save Prompt
+                        프롬프트 저장
                       </Button>
                       <Button onClick={handleAcceptPrompt}>
-                        Accept & Test Prompt
+                        승인하고 테스트하기
                       </Button>
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <Edit3 className="h-8 w-8 mx-auto mb-2" />
-                    <p>Complete the previous steps to generate your prompt</p>
+                    <p>이전 단계를 완료하면 프롬프트가 생성됩니다.</p>
                   </div>
                 )}
               </div>

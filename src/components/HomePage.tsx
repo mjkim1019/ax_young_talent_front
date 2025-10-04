@@ -20,15 +20,15 @@ export function HomePage({ onNavigate }: HomePageProps) {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl mb-2">Hello, Alex</h1>
+              <h1 className="text-3xl mb-2">안녕하세요, Alex님</h1>
               <p className="text-muted-foreground text-lg">
-                Create powerful prompts with AI assistance or explore team templates
+                AI와 함께 강력한 프롬프트를 만들거나 팀 템플릿을 살펴보세요.
               </p>
             </div>
             <div className="w-48 h-32 rounded-lg overflow-hidden">
               <ImageWithFallback
                 src="https://images.unsplash.com/photo-1650171457588-dc7baef3ed22?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhaSUyMHJvYm90JTIwYXNzaXN0YW50fGVufDF8fHx8MTc1ODEyNjYwMHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                alt="AI Assistant"
+                alt="AI 도우미"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -43,9 +43,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <Plus className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">Create Prompt</CardTitle>
+                    <CardTitle className="text-xl">프롬프트 생성</CardTitle>
                     <CardDescription>
-                      Step-by-step wizard with AI clarifying questions
+                      AI 확인 질문과 함께 단계별 마법사를 이용하세요.
                     </CardDescription>
                   </div>
                 </div>
@@ -53,7 +53,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <CardContent>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <Zap className="h-4 w-4" />
-                  <span>AI-powered guidance</span>
+                  <span>AI 기반 가이드</span>
                 </div>
               </CardContent>
             </Card>
@@ -65,9 +65,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <FileText className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">Browse Templates</CardTitle>
+                    <CardTitle className="text-xl">템플릿 둘러보기</CardTitle>
                     <CardDescription>
-                      Templates shared by teams and organization
+                      팀과 조직에서 공유한 템플릿을 확인하세요.
                     </CardDescription>
                   </div>
                 </div>
@@ -75,7 +75,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <CardContent>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  <span>{teamTemplates.length} team templates available</span>
+                  <span>{teamTemplates.length}개의 팀 템플릿을 사용할 수 있어요</span>
                 </div>
               </CardContent>
             </Card>
@@ -86,9 +86,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
           {/* Recent Prompts */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl">Recent Prompts</h2>
+              <h2 className="text-xl">최근 프롬프트</h2>
               <Button variant="ghost" size="sm">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
+                전체 보기 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
             <div className="space-y-3">
@@ -116,9 +116,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
           {/* Team's Shared Templates */}
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl">Team Shared Templates</h2>
+              <h2 className="text-xl">팀 공유 템플릿</h2>
               <Button variant="ghost" size="sm" onClick={() => onNavigate('templates')}>
-                View All <ChevronRight className="h-4 w-4 ml-1" />
+                전체 보기 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
             <div className="space-y-3">
@@ -132,10 +132,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <p className="text-sm">{template.title}</p>
-                        <span className="text-xs text-muted-foreground">{uses} uses</span>
+                        <span className="text-xs text-muted-foreground">{uses}회 사용</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">by {template.creator}</p>
+                        <p className="text-xs text-muted-foreground">작성자 {template.creator}</p>
                         <div className="flex space-x-1">
                           {highlightTags.slice(0, 2).map((tag) => (
                             <Badge key={tag} variant="secondary" className="text-xs px-2 py-0">

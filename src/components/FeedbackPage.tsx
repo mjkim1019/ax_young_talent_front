@@ -133,11 +133,11 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Button variant="ghost" onClick={() => onNavigate('home')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
+            <ArrowLeft className="h-4 w-4 mr-2" /> 홈으로 돌아가기
           </Button>
-          <h1 className="text-2xl mb-2">Test Prompt & Provide Feedback</h1>
+          <h1 className="text-2xl mb-2">프롬프트 테스트 및 피드백</h1>
           <p className="text-muted-foreground">
-            Review the generated prompt and its output. Add annotations and feedback to improve it.
+            생성된 프롬프트와 출력물을 검토하고 개선을 위한 의견을 남겨주세요.
           </p>
         </div>
 
@@ -147,14 +147,14 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Prompt Template</CardTitle>
+                  <CardTitle>프롬프트</CardTitle>
                   <Button size="sm" variant="outline">
                     <Edit3 className="h-4 w-4 mr-2" />
-                    Edit
+                    편집
                   </Button>
                 </div>
                 <CardDescription>
-                  Click and drag to select text for annotation
+                  주석을 추가하려면 텍스트를 드래그해 선택하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -165,7 +165,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                 {/* Prompt Comments */}
                 {comments.filter(c => c.type === 'prompt').length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-sm text-muted-foreground">Prompt Comments:</h4>
+                    <h4 className="text-sm text-muted-foreground">프롬프트 주석</h4>
                     {comments.filter(c => c.type === 'prompt').map((comment) => (
                       <div key={comment.id} className="flex items-start space-x-2 bg-background border rounded-lg p-3">
                         <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -185,16 +185,16 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
             {data.template && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Template Info</CardTitle>
+                  <CardTitle className="text-lg">템플릿 정보</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Template:</span>
+                      <span className="text-sm text-muted-foreground">템플릿명</span>
                       <span className="text-sm font-medium">{data.template.title}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Creator:</span>
+                      <span className="text-sm text-muted-foreground">작성자</span>
                       <span className="text-sm">{data.template.creator}</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -214,9 +214,9 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>AI Generated Output</CardTitle>
+                <CardTitle>AI 생성 결과</CardTitle>
                 <CardDescription>
-                  Select text to add feedback comments
+                  피드백을 남기려면 텍스트를 선택하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -227,7 +227,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                 {/* Output Comments */}
                 {comments.filter(c => c.type === 'output').length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-sm text-muted-foreground">Output Comments:</h4>
+                    <h4 className="text-sm text-muted-foreground">출력 주석</h4>
                     {comments.filter(c => c.type === 'output').map((comment) => (
                       <div key={comment.id} className="flex items-start space-x-2 bg-background border rounded-lg p-3">
                         <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
@@ -246,14 +246,14 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>General Feedback</CardTitle>
+                <CardTitle>전체 피드백</CardTitle>
                 <CardDescription>
-                  Overall thoughts about the prompt and output quality
+                  프롬프트와 출력 품질에 대한 전반적인 의견을 남겨주세요.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  placeholder="What worked well? What could be improved? Any suggestions for the prompt or output format?"
+                  placeholder="좋았던 점, 개선이 필요한 점, 프롬프트/출력 형식에 대한 제안을 작성하세요."
                   value={generalFeedback}
                   onChange={(e) => setGeneralFeedback(e.target.value)}
                   className="min-h-[100px]"
@@ -262,14 +262,14 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                 <div className="flex justify-between">
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <MessageSquare className="h-4 w-4" />
-                    <span>{comments.length} annotation{comments.length !== 1 ? 's' : ''}</span>
+                    <span>주석 {comments.length}개</span>
                   </div>
                   <div className="space-x-2">
                     <Button variant="outline" onClick={() => onNavigate('home')}>
-                      Save as Draft
+                      임시 저장
                     </Button>
                     <Button onClick={() => onNavigate('home')}>
-                      Submit Feedback
+                      피드백 제출
                     </Button>
                   </div>
                 </div>
@@ -283,14 +283,14 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <Card className="w-full max-w-md">
               <CardHeader>
-                <CardTitle>Add Comment</CardTitle>
+                <CardTitle>주석 추가</CardTitle>
                 <CardDescription>
-                  Add feedback for the selected text
+                  선택한 텍스트에 대한 피드백을 작성하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  placeholder="Enter your comment..."
+                  placeholder="내용을 입력하세요..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   className="min-h-[100px]"
@@ -306,11 +306,11 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                     }}
                   >
                     <X className="h-4 w-4 mr-2" />
-                    Cancel
+                    취소
                   </Button>
                   <Button onClick={addComment} disabled={!newComment.trim()}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Comment
+                    주석 추가
                   </Button>
                 </div>
               </CardContent>

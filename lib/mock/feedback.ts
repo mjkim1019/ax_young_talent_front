@@ -1,41 +1,41 @@
-export const feedbackSampleOutput = `**Employee Information:**
-- Name: Alex Thompson
-- Role: Senior Software Engineer
-- Department: Engineering
-- Review Period: Q3 2024
+export const feedbackSampleOutput = `**직원 정보:**
+- 이름: Alex Thompson
+- 직무: 시니어 소프트웨어 엔지니어
+- 조직: 엔지니어링팀
+- 평가 기간: 2024년 3분기
 
-**Performance Areas:**
+**성과 영역:**
 
-1. **Goal Achievement**
-   - Successfully led the migration of legacy authentication system, completing it 2 weeks ahead of schedule
-   - Delivered 3 major features including the new user dashboard and API optimization
-   - Exceeded code quality metrics with 95% test coverage on all new features
-   - Collaborated effectively with the design team to implement user-friendly interfaces
+1. **목표 달성**
+   - 레거시 인증 시스템 마이그레이션을 계획보다 2주 빠르게 완료했습니다.
+   - 신규 대시보드와 API 최적화를 포함한 핵심 기능 3개를 일정 전에 제공했습니다.
+   - 신규 기능 전반에 95% 테스트 커버리지를 확보하며 품질 지표를 초과 달성했습니다.
+   - 디자인팀과 적극 협업해 사용자 친화적인 인터페이스를 구현했습니다.
 
-2. **Key Competencies**
-   - **Technical Skills**: Demonstrated mastery of React, Node.js, and database optimization
-   - **Communication**: Provided clear documentation and mentored 2 junior developers
-   - **Problem-solving**: Identified and resolved critical performance bottlenecks
-   - **Leadership**: Led daily standups and code review sessions during team lead's absence
+2. **핵심 역량**
+   - **기술 역량**: React, Node.js, 데이터베이스 최적화에 대한 숙련도를 입증했습니다.
+   - **커뮤니케이션**: 명확한 문서를 작성하고 주니어 개발자 2명을 멘토링했습니다.
+   - **문제 해결**: 주요 성능 병목을 식별하고 해결했습니다.
+   - **리더십**: 팀 리드 부재 시 일일 스탠드업과 코드 리뷰를 주도했습니다.
 
-3. **Growth and Development**
-   - Completed advanced TypeScript certification
-   - Attended React Conference and shared learnings with the team
-   - Initiated weekly tech talks within the engineering department
-   - Areas for development: Public speaking and stakeholder management
+3. **성장과 개발**
+   - 고급 TypeScript 인증을 취득했습니다.
+   - React 컨퍼런스에 참석해 팀과 주요 인사이트를 공유했습니다.
+   - 엔지니어링 조직 내 주간 기술 세션을 시작했습니다.
+   - 향후 개발 필요 영역: 대외 발표 역량과 이해관계자 관리 능력.
 
-4. **Feedback Integration**
-   - Successfully improved code review feedback turnaround time from 2 days to 4 hours
-   - Demonstrated increased proactivity in identifying technical debt
-   - Shows strong self-awareness and actively seeks feedback from peers
+4. **피드백 반영**
+   - 코드 리뷰 피드백 반영 시간을 2일에서 4시간으로 단축했습니다.
+   - 기술 부채를 능동적으로 식별하며 개선을 제안했습니다.
+   - 높은 자기 인식과 동료 피드백 수용 태도를 보였습니다.
 
-**Recommendations:**
-- Continue leading complex technical initiatives
-- Consider taking on more cross-functional projects to develop stakeholder management skills
-- Explore opportunities to present at external conferences
+**추천 사항:**
+- 대규모 기술 과제를 지속적으로 리드하도록 지원하세요.
+- 이해관계자 관리 역량 강화를 위해 교차 조직 프로젝트 참여를 권장합니다.
+- 외부 컨퍼런스 발표 기회를 탐색하세요.
 
-**Goals for Q4 2024:**
-- Lead the microservices architecture transition project
-- Mentor 1 additional junior developer
-- Complete stakeholder management training
-- Improve system monitoring and alerting implementation`;
+**2024년 4분기 목표:**
+- 마이크로서비스 아키텍처 전환 프로젝트를 리드합니다.
+- 주니어 개발자 1명을 추가로 멘토링합니다.
+- 이해관계자 관리 교육을 수료합니다.
+- 모니터링 및 알림 체계를 강화합니다.`;

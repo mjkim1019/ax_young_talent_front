@@ -24,25 +24,25 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
               variant={currentView === 'home' ? 'default' : 'ghost'}
               onClick={() => onNavigate('home')}
             >
-              Home
+              홈
             </Button>
             <Button
               variant={currentView === 'create' ? 'default' : 'ghost'}
               onClick={() => onNavigate('create')}
             >
-              Create Prompt
+              프롬프트 생성
             </Button>
             <Button
               variant={currentView === 'templates' ? 'default' : 'ghost'}
               onClick={() => onNavigate('templates')}
             >
-              Templates
+              템플릿
             </Button>
             <Button
               variant={currentView === 'profile' ? 'default' : 'ghost'}
               onClick={() => onNavigate('profile')}
             >
-              My Profile
+              내 프로필
             </Button>
           </nav>
         </div>
@@ -52,7 +52,7 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
-              placeholder="Search prompts..."
+              placeholder="프롬프트 검색..."
               className="w-64 bg-muted rounded-lg border-0 pl-10 pr-4 py-2 text-sm"
             />
           </div>

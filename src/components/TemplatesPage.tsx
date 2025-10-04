@@ -15,6 +15,16 @@ interface TemplatesPageProps {
   onNavigate: (view: string, data?: any) => void;
 }
 
+const categoryLabels: Record<string, string> = {
+  all: "전체 카테고리",
+  HR: "인사",
+  Sales: "영업",
+  Engineering: "엔지니어링",
+  Marketing: "마케팅",
+  Operations: "운영",
+  Product: "프로덕트",
+};
+
 export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -48,11 +58,11 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Button variant="ghost" onClick={() => onNavigate('home')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
+            <ArrowLeft className="h-4 w-4 mr-2" /> 홈으로 돌아가기
           </Button>
-          <h1 className="text-2xl mb-2">Template Gallery</h1>
+          <h1 className="text-2xl mb-2">템플릿 갤러리</h1>
           <p className="text-muted-foreground">
-            Discover and use templates shared by your team and organization
+            팀과 조직이 공유한 템플릿을 탐색하고 활용하세요.
           </p>
         </div>
 
@@ -60,12 +70,12 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
           {/* Sidebar Filters */}
           <div className="lg:w-64 space-y-6">
             <div>
-              <h3 className="text-sm mb-3">Search</h3>
+              <h3 className="text-sm mb-3">검색</h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search templates..."
+                  placeholder="템플릿 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -74,7 +84,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
             </div>
 
             <div>
-              <h3 className="text-sm mb-3">Category</h3>
+              <h3 className="text-sm mb-3">카테고리</h3>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger>
                   <SelectValue />
@@ -82,7 +92,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
                 <SelectContent>
                   {templateCategories.map(category => (
                     <SelectItem key={category} value={category}>
-                      {category === "all" ? "All Categories" : category}
+                      {categoryLabels[category] ?? category}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -90,34 +100,34 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
             </div>
 
             <div>
-              <h3 className="text-sm mb-3">Sort by</h3>
+              <h3 className="text-sm mb-3">정렬 기준</h3>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="recent">Recently Updated</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                  <SelectItem value="popular">인기순</SelectItem>
+                  <SelectItem value="recent">최근 업데이트</SelectItem>
+                  <SelectItem value="rating">평점순</SelectItem>
+                  <SelectItem value="alphabetical">가나다순</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="pt-4 border-t">
-              <h3 className="text-sm mb-3">Quick Stats</h3>
+              <h3 className="text-sm mb-3">요약 통계</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Total Templates</span>
-                  <span>{templateSummaries.length}</span>
+                  <span>전체 템플릿</span>
+                  <span>{templateSummaries.length}개</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Your Team's</span>
-                  <span>12</span>
+                  <span>내 팀 보유</span>
+                  <span>12개</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Most Used</span>
-                  <span>Meeting Summary</span>
+                  <span>가장 자주 사용</span>
+                  <span>회의 요약 양식</span>
                 </div>
               </div>
             </div>
@@ -125,15 +135,20 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-sm text-muted-foreground">
-                Showing {filteredTemplates.length} templates
-              </p>
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Filtered by: {selectedCategory === "all" ? "All" : selectedCategory}</span>
-              </div>
-            </div>
+            {(() => {
+              const selectedLabel = categoryLabels[selectedCategory] ?? selectedCategory;
+              return (
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-sm text-muted-foreground">
+                    총 {filteredTemplates.length}개 템플릿 표시
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">필터: {selectedCategory === "all" ? "전체" : selectedLabel}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredTemplates.map((template) => (
@@ -174,7 +189,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Users className="h-3 w-3" />
-                          <span>{template.usageCount} uses</span>
+                          <span>{template.usageCount}회 사용</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
@@ -184,10 +199,10 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
 
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-muted-foreground">
-                          by {template.creator} • {template.team}
+                          작성자 {template.creator} • {template.team}
                         </div>
                         <Button size="sm" variant="outline">
-                          Use Template
+                          템플릿 사용
                         </Button>
                       </div>
                     </div>
@@ -198,12 +213,16 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
 
             {filteredTemplates.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No templates found matching your criteria.</p>
-                <Button variant="outline" className="mt-4" onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("all");
-                }}>
-                  Clear Filters
+                <p className="text-muted-foreground">조건에 맞는 템플릿이 없습니다.</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedCategory("all");
+                  }}
+                >
+                  필터 초기화
                 </Button>
               </div>
             )}

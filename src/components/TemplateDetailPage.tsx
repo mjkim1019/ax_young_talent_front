@@ -23,7 +23,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
   if (!template) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p>Template not found</p>
+        <p>템플릿을 찾을 수 없습니다.</p>
       </div>
     );
   }
@@ -33,7 +33,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Button variant="ghost" onClick={() => onNavigate('templates')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Templates
+            <ArrowLeft className="h-4 w-4 mr-2" /> 템플릿 목록으로
           </Button>
         </div>
 
@@ -55,9 +55,9 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
 
             <Card>
               <CardHeader>
-                <CardTitle>Prompt Template</CardTitle>
+                <CardTitle>프롬프트 템플릿</CardTitle>
                 <CardDescription>
-                  The complete prompt that will be used to generate content
+                  이 템플릿으로 콘텐츠를 생성할 전체 프롬프트입니다.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -67,11 +67,11 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <div className="flex items-center space-x-2 mt-4">
                   <Button size="sm" variant="outline">
                     <Copy className="h-4 w-4 mr-2" />
-                    Copy Prompt
+                    프롬프트 복사
                   </Button>
                   <Button size="sm" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
                     <Play className="h-4 w-4 mr-2" />
-                    Use This Template
+                    이 템플릿 사용
                   </Button>
                 </div>
               </CardContent>
@@ -79,9 +79,9 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
 
             <Card>
               <CardHeader>
-                <CardTitle>Example Outputs</CardTitle>
+                <CardTitle>예시 출력</CardTitle>
                 <CardDescription>
-                  See what this template can generate
+                  이 템플릿으로 생성 가능한 결과를 확인하세요.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -109,7 +109,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Template Info</CardTitle>
+                <CardTitle className="text-lg">템플릿 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
@@ -123,23 +123,23 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <div className="flex items-center space-x-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm">
-                    <p className="text-muted-foreground">Last updated {template.lastUpdated}</p>
+                    <p className="text-muted-foreground">최종 수정 {template.lastUpdated}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm">
-                    <p className="font-medium">{template.usageCount} times used</p>
-                    <p className="text-muted-foreground">by your organization</p>
+                    <p className="font-medium">총 {template.usageCount}회 사용</p>
+                    <p className="text-muted-foreground">조직 전체 사용 기록</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
                   <Star className="h-4 w-4 text-yellow-500" />
                   <div className="text-sm">
-                    <p className="font-medium">{template.rating}/5.0 rating</p>
-                    <p className="text-muted-foreground">from 24 reviews</p>
+                    <p className="font-medium">평점 {template.rating}/5.0</p>
+                    <p className="text-muted-foreground">리뷰 24건 기준</p>
                   </div>
                 </div>
               </CardContent>
@@ -147,45 +147,45 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Actions</CardTitle>
+                <CardTitle className="text-lg">빠른 실행</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
                   <Play className="h-4 w-4 mr-2" />
-                  Use This Template
+                  이 템플릿 사용
                 </Button>
                 <Button variant="outline" className="w-full">
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy to My Templates
+                  내 템플릿으로 복사
                 </Button>
                 <Button variant="outline" className="w-full">
                   <Star className="h-4 w-4 mr-2" />
-                  Add to Favorites
+                  즐겨찾기에 추가
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Usage Stats</CardTitle>
+                <CardTitle className="text-lg">사용 통계</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">This week</span>
-                    <span className="font-medium">8 uses</span>
+                    <span className="text-muted-foreground">이번 주</span>
+                    <span className="font-medium">8회</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">This month</span>
-                    <span className="font-medium">24 uses</span>
+                    <span className="text-muted-foreground">이번 달</span>
+                    <span className="font-medium">24회</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">All time</span>
-                    <span className="font-medium">{template.usageCount} uses</span>
+                    <span className="text-muted-foreground">누적</span>
+                    <span className="font-medium">{template.usageCount}회</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Top user</span>
+                    <span className="text-muted-foreground">최다 사용자</span>
                     <span className="font-medium">Mike R.</span>
                   </div>
                 </div>
@@ -194,21 +194,21 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Related Templates</CardTitle>
+                <CardTitle className="text-lg">연관 템플릿</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="text-sm">
-                    <p className="font-medium">Performance Goals Template</p>
-                    <p className="text-muted-foreground text-xs">by Sarah Chen</p>
+                    <p className="font-medium">성과 목표 템플릿</p>
+                    <p className="text-muted-foreground text-xs">작성자 Sarah Chen</p>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium">1:1 Meeting Notes</p>
-                    <p className="text-muted-foreground text-xs">by David Wilson</p>
+                    <p className="font-medium">1:1 미팅 노트</p>
+                    <p className="text-muted-foreground text-xs">작성자 David Wilson</p>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium">Annual Review Summary</p>
-                    <p className="text-muted-foreground text-xs">by Lisa Park</p>
+                    <p className="font-medium">연간 리뷰 요약</p>
+                    <p className="text-muted-foreground text-xs">작성자 Lisa Park</p>
                   </div>
                 </div>
               </CardContent>
