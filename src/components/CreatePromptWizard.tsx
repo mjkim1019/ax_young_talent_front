@@ -1,13 +1,30 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Textarea } from "./ui/textarea";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
-import { ArrowLeft, Upload, MessageCircle, Bot, User, CheckCircle, FileText, Target, MessageSquare, Edit3, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  MessageCircle,
+  Bot,
+  User,
+  CheckCircle,
+  FileText,
+  Target,
+  MessageSquare,
+  Edit3,
+  Check,
+} from "lucide-react";
+import {
+  companyDocumentStyles,
+  predefinedFormats,
+  uploadAccepts,
+  wizardQuestions,
+} from "../../lib/mock/wizard";
 
 interface CreatePromptWizardProps {
   onNavigate: (view: string, data?: any) => void;
@@ -19,13 +36,6 @@ interface UploadedFile {
   type: string;
   content: string;
 }
-
-const aiQuestions = [
-  "What specific type of document or content should this prompt generate?",
-  "Who is the target audience for the output?",
-  "What tone should the output have? (formal, casual, persuasive, etc.)?",
-  "Are there any special requirements or constraints I should know about?",
-];
 
 export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
   // Step completion tracking
@@ -165,7 +175,7 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
       setAiResponses([...aiResponses, userResponse]);
       setUserResponse("");
       
-      if (currentQuestion < aiQuestions.length - 1) {
+      if (currentQuestion < wizardQuestions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
       } else {
         completeStep("step3");
@@ -184,9 +194,11 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     if (outputMethod === "upload" && uploadedFile) {
       outputContext = `Based on the uploaded sample file: ${uploadedFile.name}`;
     } else if (outputMethod === "predefined") {
-      outputContext = `Format: ${predefinedFormat}`;
+      const formatLabel = predefinedFormats.find((option) => option.id === predefinedFormat)?.label ?? predefinedFormat;
+      outputContext = `Format: ${formatLabel}`;
     } else if (outputMethod === "company") {
-      outputContext = `Style: ${documentStyle}`;
+      const styleLabel = companyDocumentStyles.find((style) => style.id === documentStyle)?.label ?? documentStyle;
+      outputContext = `Style: ${styleLabel}`;
     }
 
     const prompt = `Generate content for: ${purpose}
@@ -194,7 +206,9 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 ${outputContext}
 
 Context from clarifying questions:
-${aiResponses.map((response, i) => `${aiQuestions[i]}: ${response}`).join('\n')}
+${aiResponses
+      .map((response, i) => `${wizardQuestions[i]?.text ?? ""}: ${response}`)
+      .join("\n")}
 
 Please ensure the output is well-structured, clear, and meets the specified requirements.`;
     
@@ -329,7 +343,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                       ref={fileInputRef}
                       type="file"
                       onChange={handleFileUpload}
-                      accept=".txt,.doc,.docx,.pdf"
+                      accept={uploadAccepts.extensions.join(",")}
                       className="hidden"
                     />
                     {!uploadedFile ? (
@@ -385,22 +399,14 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                     <Label className="text-sm mb-2 block">Choose format:</Label>
                     <RadioGroup value={predefinedFormat} onValueChange={handlePredefinedFormatChange}>
                       <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="email" id="email" />
-                          <Label htmlFor="email" className="cursor-pointer">Email</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="report" id="report" />
-                          <Label htmlFor="report" className="cursor-pointer">Report</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="summary" id="summary" />
-                          <Label htmlFor="summary" className="cursor-pointer">Summary</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="presentation" id="presentation" />
-                          <Label htmlFor="presentation" className="cursor-pointer">Presentation</Label>
-                        </div>
+                        {predefinedFormats.map((option) => (
+                          <div key={option.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option.id} id={option.id} />
+                            <Label htmlFor={option.id} className="cursor-pointer">
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
                     </RadioGroup>
                   </div>
@@ -415,11 +421,11 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                         <SelectValue placeholder="Select document style" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="professional">Professional Report</SelectItem>
-                        <SelectItem value="technical">Technical Documentation</SelectItem>
-                        <SelectItem value="marketing">Marketing Copy</SelectItem>
-                        <SelectItem value="internal">Internal Memo</SelectItem>
-                        <SelectItem value="executive">Executive Summary</SelectItem>
+                        {companyDocumentStyles.map((style) => (
+                          <SelectItem key={style.id} value={style.id}>
+                            {style.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -467,7 +473,7 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 bg-muted rounded-lg p-3">
-                        <p className="text-sm">{aiQuestions[index]}</p>
+                        <p className="text-sm">{wizardQuestions[index]?.text}</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 justify-end">
@@ -482,14 +488,14 @@ Please ensure the output is well-structured, clear, and meets the specified requ
                 ))}
 
                 {/* Current question */}
-                {currentQuestion < aiQuestions.length && !completedSteps.has("step3") && (
+                {currentQuestion < wizardQuestions.length && !completedSteps.has("step3") && (
                   <div className="space-y-3">
                     <div className="flex items-start space-x-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 bg-muted rounded-lg p-3">
-                        <p className="text-sm">{aiQuestions[currentQuestion]}</p>
+                        <p className="text-sm">{wizardQuestions[currentQuestion]?.text}</p>
                       </div>
                     </div>
                     <div className="flex items-end space-x-3">

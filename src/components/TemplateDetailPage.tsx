@@ -5,62 +5,17 @@ import { Separator } from "./ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { ArrowLeft, User, Calendar, TrendingUp, Star, ChevronDown, Copy, Play } from "lucide-react";
 import { useState } from "react";
+import {
+  TemplateExampleOutput,
+  templateExampleOutputs,
+  templateSamplePrompt,
+  TemplateSummary,
+} from "../../lib/mock/templates";
 
 interface TemplateDetailPageProps {
-  template: any;
+  template?: TemplateSummary;
   onNavigate: (view: string, data?: any) => void;
 }
-
-const samplePrompt = `You are an expert in quarterly performance reviews. Create a comprehensive quarterly review for an employee based on the following template:
-
-**Employee Information:**
-- Name: [Employee Name]
-- Role: [Job Title]
-- Department: [Department]
-- Review Period: [Quarter and Year]
-
-**Performance Areas to Evaluate:**
-
-1. **Goal Achievement**
-   - Review progress on quarterly objectives
-   - Assess completion rate and quality of deliverables
-   - Note any exceeded expectations or areas of concern
-
-2. **Key Competencies**
-   - Technical skills relevant to the role
-   - Communication and collaboration
-   - Problem-solving and initiative
-   - Leadership (if applicable)
-
-3. **Growth and Development**
-   - Skills developed during the quarter
-   - Training completed or in progress
-   - Areas for future development
-
-4. **Feedback Integration**
-   - How well the employee incorporated previous feedback
-   - Self-awareness and adaptability
-
-**Format Requirements:**
-- Use a professional, constructive tone
-- Include specific examples where possible
-- Provide actionable recommendations
-- End with clear goals for the next quarter
-
-Please structure the review with clear headings and bullet points for easy reading.`;
-
-const sampleOutputs = [
-  {
-    id: 1,
-    title: "Software Engineer Review",
-    preview: "**Employee Information:**\n- Name: Alex Thompson\n- Role: Senior Software Engineer\n- Department: Engineering\n- Review Period: Q3 2024\n\n**Performance Areas:**\n\n1. **Goal Achievement**\n   - Successfully led the migration of legacy authentication system\n   - Delivered 3 major features ahead of schedule...",
-  },
-  {
-    id: 2,
-    title: "Marketing Manager Review",
-    preview: "**Employee Information:**\n- Name: Sarah Martinez\n- Role: Marketing Manager\n- Department: Marketing\n- Review Period: Q3 2024\n\n**Performance Areas:**\n\n1. **Goal Achievement**\n   - Exceeded lead generation targets by 25%\n   - Launched successful product campaign with 40% engagement rate...",
-  }
-];
 
 export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageProps) {
   const [expandedOutput, setExpandedOutput] = useState<number | null>(null);
@@ -107,14 +62,14 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto">
-                  {samplePrompt}
+                  {templateSamplePrompt}
                 </div>
                 <div className="flex items-center space-x-2 mt-4">
                   <Button size="sm" variant="outline">
                     <Copy className="h-4 w-4 mr-2" />
                     Copy Prompt
                   </Button>
-                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: samplePrompt, template })}>
+                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
                     <Play className="h-4 w-4 mr-2" />
                     Use This Template
                   </Button>
@@ -130,7 +85,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {sampleOutputs.map((output) => (
+                {templateExampleOutputs.map((output: TemplateExampleOutput) => (
                   <Collapsible key={output.id}>
                     <CollapsibleTrigger
                       className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -195,7 +150,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <CardTitle className="text-lg">Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: samplePrompt, template })}>
+                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
                   <Play className="h-4 w-4 mr-2" />
                   Use This Template
                 </Button>

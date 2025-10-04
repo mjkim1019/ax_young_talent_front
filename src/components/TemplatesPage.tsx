@@ -4,103 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { ArrowLeft, Search, Filter, Users, Clock, Star } from "lucide-react";
+import { ArrowLeft, Search, Users, Clock, Star, Filter } from "lucide-react";
+import {
+  templateCategories,
+  templateSummaries,
+  TemplateSummary,
+} from "../../lib/mock/templates";
 
 interface TemplatesPageProps {
   onNavigate: (view: string, data?: any) => void;
 }
-
-const allTemplates = [
-  {
-    id: 1,
-    title: "Quarterly Review Template",
-    description: "Comprehensive template for quarterly performance reviews and goal setting",
-    creator: "Sarah Chen",
-    team: "HR Team",
-    tags: ["Reports", "Performance", "Management"],
-    usageCount: 42,
-    rating: 4.8,
-    lastUpdated: "2 days ago",
-    category: "HR"
-  },
-  {
-    id: 2,
-    title: "Client Onboarding Process",
-    description: "Step-by-step guide for onboarding new clients with all necessary documentation",
-    creator: "Mike Rodriguez",
-    team: "Sales Team",
-    tags: ["Process", "Communication", "Sales"],
-    usageCount: 28,
-    rating: 4.6,
-    lastUpdated: "1 week ago",
-    category: "Sales"
-  },
-  {
-    id: 3,
-    title: "Bug Report Analysis",
-    description: "Technical analysis template for categorizing and prioritizing bug reports",
-    creator: "Alex Kim",
-    team: "Engineering",
-    tags: ["Technical", "Analysis", "QA"],
-    usageCount: 35,
-    rating: 4.9,
-    lastUpdated: "3 days ago",
-    category: "Engineering"
-  },
-  {
-    id: 4,
-    title: "Marketing Copy Generator",
-    description: "Create compelling marketing copy for various channels and campaigns",
-    creator: "Emma Johnson",
-    team: "Marketing",
-    tags: ["Marketing", "Content", "Copy"],
-    usageCount: 19,
-    rating: 4.7,
-    lastUpdated: "5 days ago",
-    category: "Marketing"
-  },
-  {
-    id: 5,
-    title: "Meeting Summary Format",
-    description: "Standardized format for meeting summaries with action items and follow-ups",
-    creator: "David Wilson",
-    team: "Operations",
-    tags: ["Documentation", "Meetings", "Process"],
-    usageCount: 56,
-    rating: 4.5,
-    lastUpdated: "1 day ago",
-    category: "Operations"
-  },
-  {
-    id: 6,
-    title: "Customer Feedback Analysis",
-    description: "Analyze customer feedback and extract actionable insights",
-    creator: "Lisa Park",
-    team: "Product Team",
-    tags: ["Analysis", "Customer", "Product"],
-    usageCount: 31,
-    rating: 4.8,
-    lastUpdated: "4 days ago",
-    category: "Product"
-  }
-];
 
 export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
 
-  const categories = ["all", "HR", "Sales", "Engineering", "Marketing", "Operations", "Product"];
-
-  const filteredTemplates = allTemplates
-    .filter(template => {
+  const filteredTemplates = templateSummaries
+    .filter((template) => {
       const matchesSearch = template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
-    .sort((a, b) => {
+    .sort((a: TemplateSummary, b: TemplateSummary) => {
       switch (sortBy) {
         case "popular":
           return b.usageCount - a.usageCount;
@@ -152,7 +80,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map(category => (
+                  {templateCategories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category === "all" ? "All Categories" : category}
                     </SelectItem>
@@ -181,7 +109,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Total Templates</span>
-                  <span>{allTemplates.length}</span>
+                  <span>{templateSummaries.length}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Your Team's</span>

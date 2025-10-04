@@ -3,26 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Plus, Clock, Users, ChevronRight, Zap, FileText } from "lucide-react";
+import { recentPrompts, teamTemplateHighlights } from "../../lib/mock/home";
+import { templateSummaries } from "../../lib/mock/templates";
 
 interface HomePageProps {
   onNavigate: (view: string, data?: any) => void;
 }
 
-const recentPrompts = [
-  { id: 1, title: "Email Response Template", category: "Communication", lastUsed: "2 hours ago" },
-  { id: 2, title: "Project Status Report", category: "Reports", lastUsed: "1 day ago" },
-  { id: 3, title: "Meeting Summary", category: "Documentation", lastUsed: "3 days ago" },
-  { id: 4, title: "Customer Feedback Analysis", category: "Analysis", lastUsed: "1 week ago" },
-];
-
-const teamTemplates = [
-  { id: 1, title: "Quarterly Review", creator: "Sarah Kim", tags: ["Reports", "Performance"], uses: 42 },
-  { id: 2, title: "Customer Onboarding", creator: "Mike Lee", tags: ["Process", "Communication"], uses: 28 },
-  { id: 3, title: "Bug Report Analysis", creator: "Alex Park", tags: ["Technical", "Analysis"], uses: 35 },
-  { id: 4, title: "Marketing Copy", creator: "Emma Choi", tags: ["Marketing", "Content"], uses: 19 },
-];
-
 export function HomePage({ onNavigate }: HomePageProps) {
+  const teamTemplates = teamTemplateHighlights(templateSummaries);
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -132,18 +122,22 @@ export function HomePage({ onNavigate }: HomePageProps) {
               </Button>
             </div>
             <div className="space-y-3">
-              {teamTemplates.map((template) => (
-                <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('template-detail', template)}>
+              {teamTemplates.map(({ template, uses, highlightTags }) => (
+                <Card
+                  key={template.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onNavigate('template-detail', template)}
+                >
                   <CardContent className="p-4">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <p className="text-sm">{template.title}</p>
-                        <span className="text-xs text-muted-foreground">{template.uses} uses</span>
+                        <span className="text-xs text-muted-foreground">{uses} uses</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">by {template.creator}</p>
                         <div className="flex space-x-1">
-                          {template.tags.slice(0, 2).map((tag) => (
+                          {highlightTags.slice(0, 2).map((tag) => (
                             <Badge key={tag} variant="secondary" className="text-xs px-2 py-0">
                               {tag}
                             </Badge>
