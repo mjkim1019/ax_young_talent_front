@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.js?url";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf";
 
