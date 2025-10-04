@@ -7,7 +7,7 @@ export interface TemplateSummary {
   tags: string[];
   usageCount: number;
   rating: number;
-  lastUpdated: string;
+  lastUpdatedAt: string;
   category: string;
 }
 
@@ -21,7 +21,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["보고서", "성과", "관리"],
     usageCount: 42,
     rating: 4.8,
-    lastUpdated: "2일 전",
+    lastUpdatedAt: "2024-09-30T03:00:00Z",
     category: "HR",
   },
   {
@@ -33,7 +33,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["프로세스", "커뮤니케이션", "세일즈"],
     usageCount: 28,
     rating: 4.6,
-    lastUpdated: "1주 전",
+    lastUpdatedAt: "2024-09-24T09:30:00Z",
     category: "Sales",
   },
   {
@@ -45,7 +45,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["기술", "분석", "QA"],
     usageCount: 35,
     rating: 4.9,
-    lastUpdated: "3일 전",
+    lastUpdatedAt: "2024-09-29T15:45:00Z",
     category: "Engineering",
   },
   {
@@ -57,7 +57,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["마케팅", "콘텐츠", "카피"],
     usageCount: 19,
     rating: 4.7,
-    lastUpdated: "5일 전",
+    lastUpdatedAt: "2024-09-27T22:15:00Z",
     category: "Marketing",
   },
   {
@@ -69,7 +69,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["문서", "회의", "프로세스"],
     usageCount: 56,
     rating: 4.5,
-    lastUpdated: "1일 전",
+    lastUpdatedAt: "2024-10-01T07:20:00Z",
     category: "Operations",
   },
   {
@@ -81,7 +81,7 @@ export const templateSummaries: TemplateSummary[] = [
     tags: ["분석", "고객", "제품"],
     usageCount: 31,
     rating: 4.8,
-    lastUpdated: "4일 전",
+    lastUpdatedAt: "2024-09-28T11:10:00Z",
     category: "Product",
   },
 ];

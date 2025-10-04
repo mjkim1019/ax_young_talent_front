@@ -11,6 +11,7 @@ import {
   templateSamplePrompt,
   TemplateSummary,
 } from "../../lib/mock/templates";
+import { formatRelativeTimeFromNow, formatAbsoluteDate } from "../../lib/formatting";
 
 interface TemplateDetailPageProps {
   template?: TemplateSummary;
@@ -27,6 +28,13 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
       </div>
     );
   }
+
+  const lastUpdatedRelative = formatRelativeTimeFromNow(template.lastUpdatedAt);
+  const lastUpdatedAbsolute = formatAbsoluteDate(template.lastUpdatedAt, 'ko', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 
   return (
     <div className="flex-1 overflow-auto">
@@ -123,7 +131,8 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <div className="flex items-center space-x-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm">
-                    <p className="text-muted-foreground">최종 수정 {template.lastUpdated}</p>
+                    <p className="text-muted-foreground">최종 수정 {lastUpdatedRelative}</p>
+                    <p className="text-xs text-muted-foreground">({lastUpdatedAbsolute})</p>
                   </div>
                 </div>
 

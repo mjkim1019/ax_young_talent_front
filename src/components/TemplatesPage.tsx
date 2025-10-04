@@ -8,8 +8,9 @@ import { ArrowLeft, Search, Users, Clock, Star, Filter } from "lucide-react";
 import {
   templateCategories,
   templateSummaries,
-  TemplateSummary,
 } from "../../lib/mock/templates";
+import { sortTemplates, TemplateSortKey } from "../../lib/sorting";
+import { formatRelativeTimeFromNow } from "../../lib/formatting";
 
 interface TemplatesPageProps {
   onNavigate: (view: string, data?: any) => void;
@@ -28,30 +29,23 @@ const categoryLabels: Record<string, string> = {
 export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("popular");
+  const [sortBy, setSortBy] = useState<TemplateSortKey>("popular");
 
-  const filteredTemplates = templateSummaries
-    .filter((template) => {
-      const matchesSearch = template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredTemplates = sortTemplates(
+    templateSummaries.filter((template) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        template.title.toLowerCase().includes(normalizedSearch) ||
+        template.description.toLowerCase().includes(normalizedSearch) ||
+        template.tags.some((tag) => tag.toLowerCase().includes(normalizedSearch));
+
       const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
       return matchesSearch && matchesCategory;
-    })
-    .sort((a: TemplateSummary, b: TemplateSummary) => {
-      switch (sortBy) {
-        case "popular":
-          return b.usageCount - a.usageCount;
-        case "recent":
-          return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
-        case "rating":
-          return b.rating - a.rating;
-        case "alphabetical":
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
-      }
-    });
+    }),
+    sortBy,
+  );
 
   return (
     <div className="flex-1 overflow-auto">
@@ -101,7 +95,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
 
             <div>
               <h3 className="text-sm mb-3">정렬 기준</h3>
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as TemplateSortKey)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -193,7 +187,7 @@ export function TemplatesPage({ onNavigate }: TemplatesPageProps) {
                         </div>
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>{template.lastUpdated}</span>
+                          <span>{formatRelativeTimeFromNow(template.lastUpdatedAt)}</span>
                         </div>
                       </div>
 
