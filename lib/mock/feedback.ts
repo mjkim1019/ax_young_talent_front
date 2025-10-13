@@ -1,5 +1,5 @@
 export const feedbackSampleOutput = `**직원 정보:**
-- 이름: Alex Thompson
+- 이름: 김매니저
 - 직무: 시니어 소프트웨어 엔지니어
 - 조직: 엔지니어링팀
 - 평가 기간: 2024년 3분기

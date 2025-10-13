@@ -1,7 +1,6 @@
 import JSZip from "jszip";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf";
 
@@ -18,7 +17,12 @@ const EXTENSION_TYPE_MAP: Record<string, SupportedUploadType> = {
   pdf: "pdf",
 };
 
-GlobalWorkerOptions.workerSrc = pdfWorker;
+const pdfWorkerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
+
+GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 const printableRegex = /[\p{L}\p{N}\p{P}\p{Zs}]/u;
 
