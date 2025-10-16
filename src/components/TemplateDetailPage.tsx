@@ -9,9 +9,11 @@ import {
   TemplateExampleOutput,
   templateExampleOutputs,
   templateSamplePrompt,
+  performanceAnalysisPrompt, // Added this
   TemplateSummary,
 } from "../../lib/mock/templates";
 import { formatRelativeTimeFromNow, formatAbsoluteDate } from "../../lib/formatting";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface TemplateDetailPageProps {
   template?: TemplateSummary;
@@ -28,6 +30,11 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
       </div>
     );
   }
+
+  // Determine the correct prompt to use based on the template ID
+  const promptForTemplate = template.id === 7 
+    ? performanceAnalysisPrompt 
+    : templateSamplePrompt;
 
   const lastUpdatedRelative = formatRelativeTimeFromNow(template.lastUpdatedAt);
   const lastUpdatedAbsolute = formatAbsoluteDate(template.lastUpdatedAt, 'ko', {
@@ -70,14 +77,14 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto">
-                  {templateSamplePrompt}
+                  {promptForTemplate}
                 </div>
                 <div className="flex items-center space-x-2 mt-4">
                   <Button size="sm" variant="outline">
                     <Copy className="h-4 w-4 mr-2" />
                     프롬프트 복사
                   </Button>
-                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
+                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: promptForTemplate, template })}>
                     <Play className="h-4 w-4 mr-2" />
                     이 템플릿 사용
                   </Button>
@@ -103,8 +110,8 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                       <ChevronDown className={`h-4 w-4 transition-transform ${expandedOutput === output.id ? 'rotate-180' : ''}`} />
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-4">
-                      <div className="bg-muted rounded-lg p-4 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-                        {output.preview}
+                      <div className="bg-muted rounded-lg p-4 text-sm max-h-64 overflow-y-auto">
+                        <MarkdownRenderer content={output.preview} />
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -159,7 +166,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <CardTitle className="text-lg">빠른 실행</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
+                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: promptForTemplate, template })}>
                   <Play className="h-4 w-4 mr-2" />
                   이 템플릿 사용
                 </Button>
