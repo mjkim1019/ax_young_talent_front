@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
 import { Textarea } from "./ui/textarea";
@@ -23,9 +23,9 @@ import {
   companyDocumentStyles,
   predefinedFormats,
   uploadAccepts,
-  wizardQuestions,
 } from "../../lib/mock/wizard";
 import { parseFileToText, SupportedUploadType } from "../../lib/fileParsers";
+import { promptMateAI } from "../../lib/ai/openai-client";
 
 interface CreatePromptWizardProps {
   onNavigate: (view: string, data?: any) => void;
@@ -38,6 +38,7 @@ interface UploadedFile {
   content: string;
   format: SupportedUploadType;
   warnings: string[];
+  imageData?: string;
 }
 
 export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
@@ -61,10 +62,18 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
   const [aiResponses, setAiResponses] = useState<string[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userResponse, setUserResponse] = useState("");
+  const [aiQuestions, setAiQuestions] = useState<{id: string, text: string}[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   
   // Step 4: Final Prompt
   const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+
+  // Step 5: Prompt Execution
+  const [executionResult, setExecutionResult] = useState("");
+  const [isExecutingPrompt, setIsExecutingPrompt] = useState(false);
+  const [showExecutionResult, setShowExecutionResult] = useState(false);
 
   // Calculate progress based on completed steps
   const progress = (completedSteps.size / 4) * 100;
@@ -108,11 +117,14 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
         content: parsed.text,
         format: parsed.type,
         warnings: parsed.warnings,
+        imageData: parsed.imageData,
       });
       completeStep("step2");
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      // Generate AI questions when file upload is completed
+      loadAIQuestions();
     } catch (error) {
       const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
       setUploadError(message);
@@ -151,11 +163,19 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      loadAIQuestions();
     } else if (method === "company" && documentStyle) {
       completeStep("step2");
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      loadAIQuestions();
+    } else if (method === "upload" && uploadedFile) {
+      completeStep("step2");
+      if (!openSections.includes("step3")) {
+        setOpenSections(prev => [...prev, "step3"]);
+      }
+      loadAIQuestions();
     }
   };
 
@@ -166,6 +186,8 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      // Generate AI questions when step 2 is completed
+      loadAIQuestions();
     }
   };
 
@@ -176,20 +198,57 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      // Generate AI questions when step 2 is completed
+      loadAIQuestions();
     }
   };
+
+  // Load AI-generated questions when step 2 is completed
+  const loadAIQuestions = async () => {
+    if (!purpose.trim() || !outputMethod) return;
+
+    console.log('🚀 [Wizard] Loading AI questions...');
+    console.log('📋 [Wizard] Purpose:', purpose);
+    console.log('🎯 [Wizard] Output method:', outputMethod);
+
+    setIsLoadingQuestions(true);
+    try {
+      const questions = await promptMateAI.generateQuestions(purpose, outputMethod);
+      setAiQuestions(questions);
+      console.log('✅ [Wizard] AI questions loaded successfully:', questions);
+    } catch (error) {
+      console.error('❌ [Wizard] Failed to load AI questions:', error);
+      // Fallback to mock questions
+      setAiQuestions([
+        { id: "document-type", text: "이 프롬프트가 생성해야 하는 문서나 콘텐츠 유형은 무엇인가요?" },
+        { id: "audience", text: "결과물을 사용할 대상은 누구인가요?" },
+        { id: "tone", text: "원하는 톤은 무엇인가요? (격식체, 캐주얼, 설득 등)" },
+        { id: "constraints", text: "알려야 할 특별한 요구 사항이나 제약이 있나요?" }
+      ]);
+      console.log('🔄 [Wizard] Using fallback mock questions');
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  };
+
+  // Load AI questions when step 2 is completed
+  useEffect(() => {
+    if (completedSteps.has("step2") && aiQuestions.length === 0 && !isLoadingQuestions) {
+      loadAIQuestions();
+    }
+  }, [completedSteps, purpose, outputMethod]);
 
   // Step 3: Handle AI Q&A
   const handleAiResponse = () => {
     if (userResponse.trim()) {
       setAiResponses([...aiResponses, userResponse]);
       setUserResponse("");
-      
-      if (currentQuestion < wizardQuestions.length - 1) {
+
+      if (currentQuestion < aiQuestions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
       } else {
         completeStep("step3");
-        generatePrompt();
+        generateAIPrompt();
         if (!openSections.includes("step4")) {
           setOpenSections(prev => [...prev, "step4"]);
         }
@@ -197,10 +256,53 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     }
   };
 
-  // Generate the final prompt
-  const generatePrompt = () => {
+  // Generate AI-powered prompt
+  const generateAIPrompt = async () => {
+    console.log('🚀 [Wizard] Starting AI prompt generation...');
+    setIsGeneratingPrompt(true);
+
+    try {
+      let outputDetails = "";
+
+      if (outputMethod === "upload" && uploadedFile) {
+        outputDetails = `첨부한 샘플 파일 기준: ${uploadedFile.name}`;
+      } else if (outputMethod === "predefined") {
+        const formatLabel = predefinedFormats.find((option) => option.id === predefinedFormat)?.label ?? predefinedFormat;
+        outputDetails = `출력 형식: ${formatLabel}`;
+      } else if (outputMethod === "company") {
+        const styleLabel = companyDocumentStyles.find((style) => style.id === documentStyle)?.label ?? documentStyle;
+        outputDetails = `문서 스타일: ${styleLabel}`;
+      }
+
+      const context = {
+        purpose,
+        outputMethod: outputMethod as 'upload' | 'predefined' | 'company' | '',
+        outputDetails,
+        userResponses: aiResponses
+      };
+
+      console.log('📊 [Wizard] Prompt context:', context);
+      console.log('💭 [Wizard] User responses:', aiResponses);
+
+      const aiPrompt = await promptMateAI.generatePrompt(context);
+      setGeneratedPrompt(aiPrompt);
+      console.log('✅ [Wizard] AI prompt generated successfully');
+
+    } catch (error) {
+      console.error('❌ [Wizard] Failed to generate AI prompt:', error);
+      console.log('🔄 [Wizard] Falling back to manual prompt generation');
+      // Fallback to manual prompt generation
+      generateFallbackPrompt();
+    } finally {
+      setIsGeneratingPrompt(false);
+      completeStep("step4");
+    }
+  };
+
+  // Fallback prompt generation (original logic)
+  const generateFallbackPrompt = () => {
     let outputContext = "";
-    
+
     if (outputMethod === "upload" && uploadedFile) {
       outputContext = `첨부한 샘플 파일 기준: ${uploadedFile.name}`;
     } else if (outputMethod === "predefined") {
@@ -217,18 +319,44 @@ ${outputContext}
 
 추가 질문 응답:
 ${aiResponses
-      .map((response, i) => `${wizardQuestions[i]?.text ?? ""}: ${response}`)
+      .map((response, i) => `${aiQuestions[i]?.text ?? ""}: ${response}`)
       .join("\n")}
 
 위 정보에 맞춰 구조화되고 명확한 결과물을 작성하세요.`;
-    
+
     setGeneratedPrompt(prompt);
-    completeStep("step4");
   };
 
-  const handleAcceptPrompt = () => {
-    onNavigate('feedback', { prompt: generatedPrompt });
+  const handleAcceptPrompt = async () => {
+    if (!generatedPrompt.trim()) {
+      console.warn('No prompt to execute');
+      return;
+    }
+
+    console.log('🚀 [Wizard] Starting prompt execution...');
+    console.log('🖼️ [Wizard] Has uploaded image:', !!uploadedFile?.imageData);
+    setIsExecutingPrompt(true);
+
+    try {
+      const result = await promptMateAI.executePrompt(generatedPrompt, uploadedFile?.imageData);
+      console.log('✅ [Wizard] Prompt executed successfully');
+
+      // Navigate to FeedbackPage with prompt and AI result
+      onNavigate('feedback', {
+        prompt: generatedPrompt,
+        aiResult: result.text,
+        aiImageUrl: result.imageUrl,
+        uploadedFile: uploadedFile
+      });
+    } catch (error) {
+      console.error('❌ [Wizard] Failed to execute prompt:', error);
+      setExecutionResult(`오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      setShowExecutionResult(true);
+    } finally {
+      setIsExecutingPrompt(false);
+    }
   };
+
 
   return (
     <div className="flex-1 overflow-auto">
@@ -493,6 +621,14 @@ ${aiResponses
             </AccordionTrigger>
             <AccordionContent className="px-6 pb-6">
               <div className="space-y-4 max-h-96 overflow-y-auto">
+                {/* Loading state for AI questions */}
+                {isLoadingQuestions && (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">AI가 맞춤형 질문을 생성하고 있습니다...</p>
+                  </div>
+                )}
+
                 {/* Previous conversations */}
                 {aiResponses.map((response, index) => (
                   <div key={index} className="space-y-3">
@@ -501,7 +637,7 @@ ${aiResponses
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 bg-muted rounded-lg p-3">
-                        <p className="text-sm">{wizardQuestions[index]?.text}</p>
+                        <p className="text-sm">{aiQuestions[index]?.text || '질문을 불러오는 중...'}</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3 justify-end">
@@ -516,14 +652,19 @@ ${aiResponses
                 ))}
 
                 {/* Current question */}
-                {currentQuestion < wizardQuestions.length && !completedSteps.has("step3") && (
+                {currentQuestion < aiQuestions.length && !completedSteps.has("step3") && !isLoadingQuestions && (
                   <div className="space-y-3">
                     <div className="flex items-start space-x-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                         <Bot className="h-4 w-4 text-primary" />
                       </div>
                       <div className="flex-1 bg-muted rounded-lg p-3">
-                        <p className="text-sm">{wizardQuestions[currentQuestion]?.text}</p>
+                        <p className="text-sm">{aiQuestions[currentQuestion]?.text}</p>
+                        {promptMateAI.isAIEnabled() && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            🤖 AI 생성 질문 ({currentQuestion + 1}/{aiQuestions.length})
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-end space-x-3">
@@ -538,6 +679,14 @@ ${aiResponses
                         <MessageCircle className="h-4 w-4" />
                       </Button>
                     </div>
+                  </div>
+                )}
+
+                {/* AI questions not available */}
+                {!isLoadingQuestions && aiQuestions.length === 0 && completedSteps.has("step2") && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                    <p>2단계를 완료하면 맞춤형 질문이 생성됩니다.</p>
                   </div>
                 )}
 
@@ -612,11 +761,76 @@ ${aiResponses
                       <Button variant="outline" onClick={() => onNavigate('home')}>
                         프롬프트 저장
                       </Button>
-                      <Button onClick={handleAcceptPrompt}>
-                        승인하고 테스트하기
+                      <Button
+                        onClick={handleAcceptPrompt}
+                        disabled={isExecutingPrompt}
+                      >
+                        {isExecutingPrompt ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                            테스트 중...
+                          </>
+                        ) : (
+                          <>
+                            승인하고 테스트하기
+                          </>
+                        )}
                       </Button>
                     </div>
+
+                    {/* Prompt Execution Result */}
+                    {showExecutionResult && (
+                      <div className="mt-6 p-4 border rounded-lg bg-muted/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <Label className="text-sm font-medium">🎯 프롬프트 실행 결과</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowExecutionResult(false)}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+
+                        {isExecutingPrompt ? (
+                          <div className="text-center py-8">
+                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <p className="text-sm text-muted-foreground">
+                              {promptMateAI.isAIEnabled() ? 'AI가 프롬프트를 실행하고 있습니다...' : '프롬프트를 실행하고 있습니다...'}
+                            </p>
+                          </div>
+                        ) : executionResult ? (
+                          <div className="space-y-3">
+                            <div className="bg-background p-4 rounded border max-h-96 overflow-y-auto">
+                              <pre className="whitespace-pre-wrap text-sm font-mono">
+                                {executionResult}
+                              </pre>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigator.clipboard.writeText(executionResult)}
+                              >
+                                📋 결과 복사
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground">
+                            실행 결과가 여기에 표시됩니다.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </>
+                ) : isGeneratingPrompt ? (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">
+                      {promptMateAI.isAIEnabled() ? 'AI가 맞춤형 프롬프트를 생성하고 있습니다...' : '프롬프트를 생성하고 있습니다...'}
+                    </p>
+                  </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <Edit3 className="h-8 w-8 mx-auto mb-2" />

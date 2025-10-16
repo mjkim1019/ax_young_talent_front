@@ -3,12 +3,13 @@ import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf";
+export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf" | "image";
 
 export interface ParsedFileResult {
   type: SupportedUploadType;
   text: string;
   warnings: string[];
+  imageData?: string; // Base64 encoded image data for vision models
 }
 
 const EXTENSION_TYPE_MAP: Record<string, SupportedUploadType> = {
@@ -16,6 +17,11 @@ const EXTENSION_TYPE_MAP: Record<string, SupportedUploadType> = {
   doc: "doc",
   docx: "docx",
   pdf: "pdf",
+  jpg: "image",
+  jpeg: "image",
+  png: "image",
+  gif: "image",
+  webp: "image",
 };
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -55,7 +61,7 @@ export async function parseFileToText(file: File): Promise<ParsedFileResult> {
   const type = detectUploadType(file);
 
   if (!type) {
-    throw new Error("지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf만 업로드하세요.");
+    throw new Error("지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf, 이미지 파일만 업로드하세요.");
   }
 
   switch (type) {
@@ -81,6 +87,13 @@ export async function parseFileToText(file: File): Promise<ParsedFileResult> {
         type,
         text: await extractTextFromPdf(await file.arrayBuffer()),
         warnings: [],
+      };
+    case "image":
+      return {
+        type,
+        text: `이미지 파일 업로드됨: ${file.name}`,
+        warnings: [],
+        imageData: await processImageFile(file),
       };
     default:
       throw new Error("알 수 없는 파일 형식입니다.");
@@ -202,6 +215,23 @@ async function extractTextFromPdf(buffer: ArrayBuffer): Promise<string> {
   }
 
   return normalizeWhitespace(pageTexts.join("\n"));
+}
+
+async function processImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result); // Base64 데이터 URL 반환
+    };
+
+    reader.onerror = () => {
+      reject(new Error(`이미지 파일을 읽는 중 오류가 발생했습니다: ${file.name}`));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 function normalizeWhitespace(value: string): string {

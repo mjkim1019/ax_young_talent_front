@@ -48,6 +48,15 @@ export const companyDocumentStyles: DocumentStyleOption[] = [
 ];
 
 export const uploadAccepts = {
-  mimeTypes: ["text/plain", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/pdf"],
-  extensions: [".txt", ".doc", ".docx", ".pdf"],
+  mimeTypes: [
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp"
+  ],
+  extensions: [".txt", ".doc", ".docx", ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp"],
 };

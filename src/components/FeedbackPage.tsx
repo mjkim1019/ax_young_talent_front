@@ -12,6 +12,17 @@ interface FeedbackPageProps {
   data: {
     prompt: string;
     template?: TemplateSummary;
+    aiResult?: string;
+    aiImageUrl?: string;
+    uploadedFile?: {
+      name: string;
+      size: number;
+      type: string;
+      content: string;
+      format: string;
+      warnings: string[];
+      imageData?: string;
+    };
   };
   onNavigate: (view: string, data?: any) => void;
 }
@@ -30,6 +41,9 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
   const [selectedText, setSelectedText] = useState<{ start: number; end: number; type: 'prompt' | 'output' } | null>(null);
   const [newComment, setNewComment] = useState("");
   const [showCommentForm, setShowCommentForm] = useState(false);
+
+  // Use actual AI result if available, otherwise fall back to sample
+  const aiOutput = data.aiResult || feedbackSampleOutput;
 
   const handleTextSelection = (type: 'prompt' | 'output') => {
     const selection = window.getSelection();
@@ -182,6 +196,50 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
               </CardContent>
             </Card>
 
+            {data.uploadedFile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">업로드된 파일</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">파일명</span>
+                      <span className="text-sm font-medium">{data.uploadedFile.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">크기</span>
+                      <span className="text-sm">{Math.round(data.uploadedFile.size / 1024)}KB</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">형식</span>
+                      <Badge variant="secondary" className="text-xs">{data.uploadedFile.format}</Badge>
+                    </div>
+                    {data.uploadedFile.warnings.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-sm text-muted-foreground">경고:</span>
+                        {data.uploadedFile.warnings.map((warning, index) => (
+                          <p key={index} className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                            {warning}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {data.uploadedFile.imageData && (
+                      <div className="mt-2">
+                        <span className="text-sm text-muted-foreground">이미지 미리보기:</span>
+                        <img
+                          src={data.uploadedFile.imageData}
+                          alt="업로드된 이미지"
+                          className="mt-2 max-w-full max-h-32 object-contain rounded border"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {data.template && (
               <Card>
                 <CardHeader>
@@ -214,15 +272,56 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>AI 생성 결과</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>AI 생성 결과</CardTitle>
+                  <div className="flex gap-2">
+                    {data.aiResult && (
+                      <Badge variant="default" className="text-xs">
+                        실시간 AI 응답
+                      </Badge>
+                    )}
+                    {!data.aiResult && (
+                      <Badge variant="secondary" className="text-xs">
+                        샘플 데이터
+                      </Badge>
+                    )}
+                    {data.aiImageUrl && (
+                      <Badge variant="outline" className="text-xs">
+                        이미지 생성됨
+                      </Badge>
+                    )}
+                  </div>
+                </div>
                 <CardDescription>
                   피드백을 남기려면 텍스트를 선택하세요.
+                  {data.aiImageUrl && " 생성된 이미지도 확인해보세요."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm max-h-96 overflow-y-auto">
-                  {renderTextWithComments(feedbackSampleOutput, 'output')}
+                  {renderTextWithComments(aiOutput, 'output')}
                 </div>
+
+                {/* AI Generated Image */}
+                {data.aiImageUrl && (
+                  <div className="mt-4">
+                    <h4 className="text-sm text-muted-foreground mb-2">생성된 이미지</h4>
+                    <div className="border rounded-lg p-2 bg-background">
+                      <img
+                        src={data.aiImageUrl}
+                        alt="AI 생성 이미지"
+                        className="w-full max-w-md mx-auto rounded"
+                        onError={(e) => {
+                          console.error('Failed to load AI generated image');
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className="mt-2 text-xs text-muted-foreground text-center">
+                        DALL-E 3로 생성된 이미지
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Output Comments */}
                 {comments.filter(c => c.type === 'output').length > 0 && (
@@ -234,7 +333,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                         <div className="flex-1">
                           <p className="text-sm">{comment.text}</p>
                           <p className="text-xs text-muted-foreground">
-                            "{feedbackSampleOutput.slice(comment.position.start, comment.position.end)}"
+                            "{aiOutput.slice(comment.position.start, comment.position.end)}"
                           </p>
                         </div>
                       </div>
@@ -269,7 +368,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                       임시 저장
                     </Button>
                     <Button onClick={() => onNavigate('home')}>
-                      피드백 제출
+                      프롬프트 실행
                     </Button>
                   </div>
                 </div>
