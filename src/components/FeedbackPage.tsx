@@ -7,6 +7,7 @@ import { Separator } from "./ui/separator";
 import { ArrowLeft, MessageSquare, Edit3, Check, X, Plus } from "lucide-react";
 import { feedbackSampleOutput } from "../../lib/mock/feedback";
 import type { TemplateSummary } from "../../lib/mock/templates";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface FeedbackPageProps {
   data: {
@@ -316,7 +317,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm max-h-96 overflow-y-auto">
-                  {renderTextWithComments(aiOutput, 'output')}
+                  <MarkdownRenderer content={aiOutput} />
                 </div>
 
                 {/* AI Generated Image */}
@@ -385,7 +386,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                       임시 저장
                     </Button>
                     <Button onClick={() => onNavigate('home')}>
-                      프롬프트 실행
+                      공유
                     </Button>
                   </div>
                 </div>

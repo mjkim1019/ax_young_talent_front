@@ -43,13 +43,22 @@ GlobalWorkerOptions.workerSrc = pdfWorker;
 const printableRegex = /[\p{L}\p{N}\p{P}\p{Zs}]/u;
 
 export function detectUploadType(file: File): SupportedUploadType | null {
+  console.log('🔍 [File Detection] File info:', file.name, file.type, file.size);
+
   const extension = file.name.split(".").pop()?.toLowerCase();
+  console.log('📁 [File Detection] Extension:', extension);
+
   if (extension && extension in EXTENSION_TYPE_MAP) {
-    return EXTENSION_TYPE_MAP[extension];
+    const detectedType = EXTENSION_TYPE_MAP[extension];
+    console.log('✅ [File Detection] Type detected by extension:', detectedType);
+    return detectedType;
   }
 
   const mimeType = file.type;
+  console.log('📋 [File Detection] MIME type:', mimeType);
+
   if (!mimeType) {
+    console.log('❌ [File Detection] No MIME type available');
     return null;
   }
 
@@ -76,10 +85,15 @@ export function detectUploadType(file: File): SupportedUploadType | null {
 }
 
 export async function parseFileToText(file: File): Promise<ParsedFileResult> {
+  console.log('🔄 [File Parser] Starting parse for:', file.name);
+
   const type = detectUploadType(file);
+  console.log('📝 [File Parser] Detected type:', type);
 
   if (!type) {
-    throw new Error("지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf, .xlsx, 이미지 파일만 업로드하세요.");
+    const error = "지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf, .xlsx, 이미지 파일만 업로드하세요.";
+    console.error('❌ [File Parser] Unsupported file type:', error);
+    throw new Error(error);
   }
 
   switch (type) {
@@ -107,6 +121,7 @@ export async function parseFileToText(file: File): Promise<ParsedFileResult> {
         warnings: [],
       };
     case "xlsx":
+      console.log('📊 [File Parser] Processing Excel file...');
       return await extractDataFromXlsx(file);
     case "image":
       return {
@@ -256,8 +271,13 @@ async function processImageFile(file: File): Promise<string> {
 
 async function extractDataFromXlsx(file: File): Promise<ParsedFileResult> {
   try {
+    console.log('📊 [Excel Parser] Reading file buffer...');
     const buffer = await file.arrayBuffer();
+    console.log('📊 [Excel Parser] Buffer size:', buffer.byteLength);
+
+    console.log('📊 [Excel Parser] Parsing workbook...');
     const workbook = XLSX.read(buffer, { type: 'array' });
+    console.log('📊 [Excel Parser] Workbook sheets:', workbook.SheetNames);
 
     // Get the first sheet
     const sheetName = workbook.SheetNames[0];

@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Edit3,
   Check,
+  X,
 } from "lucide-react";
 import {
   companyDocumentStyles,
@@ -154,10 +155,14 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 
   // Process sample file
   const processSampleFile = async (file: File) => {
+    console.log('🔍 [Sample File] Processing started:', file.name, file.type, file.size);
     setIsProcessingFile(true);
     setUploadError(null);
     try {
+      console.log('📄 [Sample File] Parsing file...');
       const parsed = await parseFileToText(file);
+      console.log('✅ [Sample File] Parse successful:', parsed);
+
       const newFile: UploadedFile = {
         name: file.name,
         size: file.size,
@@ -169,8 +174,20 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
         structuredData: parsed.structuredData,
       };
       setSampleFile(newFile);
-      checkStepCompletion();
+      console.log('✅ [Sample File] Successfully processed');
+
+      // Check completion with the new file (since state update is async)
+      if (templateFile && newFile) {
+        console.log('🔄 [Sample File] Both files ready, triggering step completion');
+        completeStep("step2");
+        if (!openSections.includes("step3")) {
+          setOpenSections(prev => [...prev, "step3"]);
+        }
+        console.log('🚀 [Sample File] About to call loadAIQuestions');
+        loadAIQuestions();
+      }
     } catch (error) {
+      console.error('❌ [Sample File] Processing error:', error);
       const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
       setUploadError(message);
     } finally {
@@ -180,10 +197,14 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 
   // Process template file
   const processTemplateFile = async (file: File) => {
+    console.log('🎯 [Template File] Processing started:', file.name, file.type, file.size);
     setIsProcessingFile(true);
     setUploadError(null);
     try {
+      console.log('📄 [Template File] Parsing file...');
       const parsed = await parseFileToText(file);
+      console.log('✅ [Template File] Parse successful:', parsed);
+
       const newFile: UploadedFile = {
         name: file.name,
         size: file.size,
@@ -195,8 +216,20 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
         structuredData: parsed.structuredData,
       };
       setTemplateFile(newFile);
-      checkStepCompletion();
+      console.log('✅ [Template File] Successfully processed');
+
+      // Check completion with the new file (since state update is async)
+      if (sampleFile && newFile) {
+        console.log('🔄 [Template File] Both files ready, triggering step completion');
+        completeStep("step2");
+        if (!openSections.includes("step3")) {
+          setOpenSections(prev => [...prev, "step3"]);
+        }
+        console.log('🚀 [Template File] About to call loadAIQuestions');
+        loadAIQuestions();
+      }
     } catch (error) {
+      console.error('❌ [Template File] Processing error:', error);
       const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
       setUploadError(message);
     } finally {
@@ -206,12 +239,22 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 
   // Check if step 2 should be completed
   const checkStepCompletion = () => {
+    console.log('🔍 [Wizard] checkStepCompletion called');
+    console.log('📂 [Wizard] Sample file exists:', !!sampleFile, sampleFile?.name);
+    console.log('📂 [Wizard] Template file exists:', !!templateFile, templateFile?.name);
+    console.log('📋 [Wizard] Current purpose:', purpose);
+    console.log('🎯 [Wizard] Current outputMethod:', outputMethod);
+
     if (sampleFile && templateFile) {
+      console.log('✅ [Wizard] Both files present, completing step 2');
       completeStep("step2");
       if (!openSections.includes("step3")) {
         setOpenSections(prev => [...prev, "step3"]);
       }
+      console.log('🚀 [Wizard] About to call loadAIQuestions');
       loadAIQuestions();
+    } else {
+      console.log('⏸️ [Wizard] Not both files present, skipping step completion');
     }
   };
 
@@ -324,11 +367,18 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 
   // Load AI-generated questions when step 2 is completed
   const loadAIQuestions = async () => {
-    if (!purpose.trim() || !outputMethod) return;
-
-    console.log('🚀 [Wizard] Loading AI questions...');
+    console.log('🚀 [Wizard] loadAIQuestions called');
     console.log('📋 [Wizard] Purpose:', purpose);
     console.log('🎯 [Wizard] Output method:', outputMethod);
+    console.log('📂 [Wizard] Sample file:', sampleFile?.name);
+    console.log('📂 [Wizard] Template file:', templateFile?.name);
+
+    if (!purpose.trim() || !outputMethod) {
+      console.log('⏸️ [Wizard] Skipping AI questions - missing purpose or outputMethod');
+      return;
+    }
+
+    console.log('🚀 [Wizard] Loading AI questions...');
 
     setIsLoadingQuestions(true);
     try {
