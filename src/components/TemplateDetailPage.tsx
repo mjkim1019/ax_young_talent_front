@@ -8,7 +8,6 @@ import { useState } from "react";
 import {
   TemplateExampleOutput,
   templateExampleOutputs,
-  templateSamplePrompt,
   TemplateSummary,
 } from "../../lib/mock/templates";
 import { formatRelativeTimeFromNow, formatAbsoluteDate } from "../../lib/formatting";
@@ -70,14 +69,14 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto">
-                  {templateSamplePrompt}
+                  {template.prompt}
                 </div>
                 <div className="flex items-center space-x-2 mt-4">
                   <Button size="sm" variant="outline">
                     <Copy className="h-4 w-4 mr-2" />
                     프롬프트 복사
                   </Button>
-                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
+                  <Button size="sm" onClick={() => onNavigate('feedback', { prompt: template.prompt, template })}>
                     <Play className="h-4 w-4 mr-2" />
                     이 템플릿 사용
                   </Button>
@@ -159,10 +158,7 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 <CardTitle className="text-lg">빠른 실행</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: templateSamplePrompt, template })}>
-                  <Play className="h-4 w-4 mr-2" />
-                  이 템플릿 사용
-                </Button>
+                <Button className="w-full" onClick={() => onNavigate('feedback', { prompt: template.prompt, template })}>
                 <Button variant="outline" className="w-full">
                   <Copy className="h-4 w-4 mr-2" />
                   내 템플릿으로 복사
