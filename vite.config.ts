@@ -52,6 +52,28 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'ui-vendor': [
+              '@radix-ui/react-accordion',
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-label',
+              '@radix-ui/react-progress',
+              '@radix-ui/react-radio-group',
+              '@radix-ui/react-select',
+              '@radix-ui/react-tabs',
+              '@radix-ui/react-textarea'
+            ],
+            'pdf-vendor': ['pdfjs-dist'],
+            'ai-vendor': ['openai'],
+            'utils': ['jszip', 'lucide-react', 'clsx', 'class-variance-authority']
+          }
+        }
+      }
     },
   server: {
       host: '127.0.0.1',
