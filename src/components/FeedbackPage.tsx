@@ -22,6 +22,7 @@ interface FeedbackPageProps {
       format: string;
       warnings: string[];
       imageData?: string;
+      structuredData?: any; // WBS data for Excel files
     };
   };
   onNavigate: (view: string, data?: any) => void;
@@ -233,6 +234,22 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                           alt="업로드된 이미지"
                           className="mt-2 max-w-full max-h-32 object-contain rounded border"
                         />
+                      </div>
+                    )}
+                    {data.uploadedFile.structuredData && (
+                      <div className="mt-2">
+                        <span className="text-sm text-muted-foreground">구조화된 데이터:</span>
+                        <div className="mt-1 p-2 bg-muted rounded text-xs">
+                          <div>시트명: {data.uploadedFile.structuredData.metadata?.sheetName}</div>
+                          <div>행 수: {data.uploadedFile.structuredData.metadata?.totalRows}</div>
+                          <div>열 수: {data.uploadedFile.structuredData.metadata?.totalColumns}</div>
+                          {data.uploadedFile.structuredData.headers && (
+                            <div className="mt-1">
+                              헤더: {data.uploadedFile.structuredData.headers.slice(0, 3).join(", ")}
+                              {data.uploadedFile.structuredData.headers.length > 3 && "..."}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

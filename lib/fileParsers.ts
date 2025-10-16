@@ -2,14 +2,27 @@ import JSZip from "jszip";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import * as XLSX from "xlsx";
 
-export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf" | "image";
+export type SupportedUploadType = "txt" | "doc" | "docx" | "pdf" | "xlsx" | "image";
 
 export interface ParsedFileResult {
   type: SupportedUploadType;
   text: string;
   warnings: string[];
   imageData?: string; // Base64 encoded image data for vision models
+  structuredData?: WBSData; // Structured data for Excel/WBS files
+}
+
+export interface WBSData {
+  headers: string[];
+  rows: string[][];
+  metadata: {
+    totalRows: number;
+    totalColumns: number;
+    sheetName: string;
+    hasHeaders: boolean;
+  };
 }
 
 const EXTENSION_TYPE_MAP: Record<string, SupportedUploadType> = {
@@ -17,6 +30,7 @@ const EXTENSION_TYPE_MAP: Record<string, SupportedUploadType> = {
   doc: "doc",
   docx: "docx",
   pdf: "pdf",
+  xlsx: "xlsx",
   jpg: "image",
   jpeg: "image",
   png: "image",
@@ -54,6 +68,10 @@ export function detectUploadType(file: File): SupportedUploadType | null {
     return mimeType === "application/msword" ? "doc" : "docx";
   }
 
+  if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+    return "xlsx";
+  }
+
   return null;
 }
 
@@ -61,7 +79,7 @@ export async function parseFileToText(file: File): Promise<ParsedFileResult> {
   const type = detectUploadType(file);
 
   if (!type) {
-    throw new Error("지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf, 이미지 파일만 업로드하세요.");
+    throw new Error("지원되지 않는 파일 형식입니다. .txt, .doc, .docx, .pdf, .xlsx, 이미지 파일만 업로드하세요.");
   }
 
   switch (type) {
@@ -88,6 +106,8 @@ export async function parseFileToText(file: File): Promise<ParsedFileResult> {
         text: await extractTextFromPdf(await file.arrayBuffer()),
         warnings: [],
       };
+    case "xlsx":
+      return await extractDataFromXlsx(file);
     case "image":
       return {
         type,
@@ -232,6 +252,114 @@ async function processImageFile(file: File): Promise<string> {
 
     reader.readAsDataURL(file);
   });
+}
+
+async function extractDataFromXlsx(file: File): Promise<ParsedFileResult> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+
+    // Get the first sheet
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    if (!worksheet) {
+      throw new Error("XLSX 파일에서 시트를 찾을 수 없습니다.");
+    }
+
+    // Convert sheet to JSON with raw format to preserve data types
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      raw: false,
+      defval: ""
+    }) as string[][];
+
+    if (jsonData.length === 0) {
+      throw new Error("XLSX 파일이 비어있습니다.");
+    }
+
+    // Detect headers (first row with content)
+    const headers = jsonData[0] || [];
+    const dataRows = jsonData.slice(1).filter(row =>
+      row.some(cell => cell && cell.toString().trim())
+    );
+
+    // Generate structured data
+    const structuredData: WBSData = {
+      headers: headers.map(h => h?.toString() || ""),
+      rows: dataRows.map(row =>
+        headers.map((_, index) => row[index]?.toString() || "")
+      ),
+      metadata: {
+        totalRows: dataRows.length,
+        totalColumns: headers.length,
+        sheetName: sheetName,
+        hasHeaders: headers.some(h => h && h.toString().trim())
+      }
+    };
+
+    // Generate text representation
+    const textLines: string[] = [];
+
+    // Add headers
+    if (structuredData.metadata.hasHeaders) {
+      textLines.push(headers.join("\t"));
+    }
+
+    // Add data rows
+    dataRows.forEach(row => {
+      const rowData = headers.map((_, index) => row[index]?.toString() || "");
+      textLines.push(rowData.join("\t"));
+    });
+
+    const textContent = textLines.join("\n");
+
+    // Detect if this looks like a WBS/project plan
+    const isWBS = detectWBSStructure(headers, dataRows);
+    const warnings: string[] = [];
+
+    if (isWBS) {
+      warnings.push("WBS/프로젝트 계획 구조가 감지되었습니다. AI가 프로젝트 관리에 특화된 처리를 제공합니다.");
+    }
+
+    return {
+      type: "xlsx",
+      text: textContent,
+      warnings,
+      structuredData
+    };
+
+  } catch (error) {
+    console.error("XLSX 파싱 오류:", error);
+    throw new Error(`XLSX 파일을 처리하는 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+  }
+}
+
+function detectWBSStructure(headers: string[], rows: string[][]): boolean {
+  const headerText = headers.join(" ").toLowerCase();
+
+  // WBS/프로젝트 계획 관련 키워드 검사
+  const wbsKeywords = [
+    "작업", "task", "activity", "milestone", "마일스톤",
+    "시작일", "종료일", "start", "end", "date", "기간", "duration",
+    "담당자", "responsible", "owner", "구분", "category", "phase",
+    "진행률", "progress", "상태", "status", "비고", "remark"
+  ];
+
+  const hasWBSKeywords = wbsKeywords.some(keyword =>
+    headerText.includes(keyword)
+  );
+
+  // 데이터 패턴 검사 (날짜, 기간 등)
+  const hasDatePattern = rows.some(row =>
+    row.some(cell => {
+      const cellText = cell.toString();
+      return /\d{4}[-\/]\d{1,2}[-\/]\d{1,2}/.test(cellText) || // 날짜 패턴
+             /\d+주|\d+일|\d+개월/.test(cellText); // 기간 패턴
+    })
+  );
+
+  return hasWBSKeywords || hasDatePattern;
 }
 
 function normalizeWhitespace(value: string): string {

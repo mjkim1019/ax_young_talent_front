@@ -6,6 +6,10 @@ interface PromptContext {
   outputMethod: 'upload' | 'predefined' | 'company' | '';
   outputDetails?: string;
   userResponses?: string[];
+  uploadedFile?: any;
+  uploadedFiles?: any[];
+  sampleFile?: any;
+  templateFile?: any;
 }
 
 interface AIQuestion {
@@ -96,14 +100,16 @@ Output Method: ${outputMethod}`;
       if (purpose.toLowerCase().includes('wbs') ||
           purpose.toLowerCase().includes('프로젝트') ||
           purpose.toLowerCase().includes('work breakdown') ||
-          purpose.toLowerCase().includes('작업분해구조')) {
+          purpose.toLowerCase().includes('작업분해구조') ||
+          outputMethod === 'upload') {
         basePrompt += `
 
 This is for PROJECT WBS (Work Breakdown Structure) creation. Generate questions that help clarify:
 1. Project scope and objectives
 2. Timeline and milestones
 3. Team structure and responsibilities
-4. Deliverables and quality standards`;
+4. Deliverables and quality standards
+5. Template format and output requirements (Excel, Markdown, etc.)`;
       }
 
       const systemPrompt = basePrompt + `
@@ -206,16 +212,106 @@ User Responses: ${context.userResponses?.join(', ') || 'N/A'}`;
       if (context.purpose.toLowerCase().includes('wbs') ||
           context.purpose.toLowerCase().includes('프로젝트') ||
           context.purpose.toLowerCase().includes('work breakdown') ||
-          context.purpose.toLowerCase().includes('작업분해구조')) {
-        basePrompt += `
+          context.purpose.toLowerCase().includes('작업분해구조') ||
+          context.outputMethod === 'upload') {
+
+        // 업로드된 파일 구조 분석
+        const hasUploadedFile = context.uploadedFile;
+        const hasSampleAndTemplate = context.sampleFile && context.templateFile;
+        const hasMultipleFiles = context.uploadedFiles && context.uploadedFiles.length > 1;
+        const isWBSTransformation = hasUploadedFile &&
+          (hasUploadedFile.structuredData || hasUploadedFile.format === 'xlsx');
+
+        if (hasSampleAndTemplate) {
+          // Dedicated sample and template file analysis
+          basePrompt += `
+
+This is for SAMPLE-TO-TEMPLATE TRANSFORMATION ANALYSIS.
+You have received a SAMPLE file and a TEMPLATE file for comparison and transformation requirements generation.
+
+SAMPLE FILE: ${context.sampleFile.name} (${context.sampleFile.format.toUpperCase()})
+${context.sampleFile.structuredData ?
+  `- Structured data with ${context.sampleFile.structuredData.metadata?.totalRows} rows and ${context.sampleFile.structuredData.metadata?.totalColumns} columns
+- Headers: ${context.sampleFile.structuredData.headers?.slice(0, 5).join(', ')}${context.sampleFile.structuredData.headers?.length > 5 ? '...' : ''}` :
+  `- Text content: ${context.sampleFile.content.substring(0, 200)}...`}
+
+TEMPLATE FILE: ${context.templateFile.name} (${context.templateFile.format.toUpperCase()})
+${context.templateFile.structuredData ?
+  `- Structured data with ${context.templateFile.structuredData.metadata?.totalRows} rows and ${context.templateFile.structuredData.metadata?.totalColumns} columns
+- Headers: ${context.templateFile.structuredData.headers?.slice(0, 5).join(', ')}${context.templateFile.structuredData.headers?.length > 5 ? '...' : ''}` :
+  `- Text content: ${context.templateFile.content.substring(0, 200)}...`}
+
+TRANSFORMATION ANALYSIS REQUIREMENTS:
+1. Compare the SAMPLE file structure vs TEMPLATE file structure
+2. Identify key differences in data organization (vertical vs horizontal layout, column arrangements, etc.)
+3. Analyze the transformation pattern needed to convert SAMPLE format to TEMPLATE format
+4. Generate detailed step-by-step transformation requirements that explain:
+   - How to restructure data from source to target format
+   - What data mappings and conversions are needed
+   - How to preserve all information while changing the layout
+   - Specific formatting rules and organizational patterns
+5. Create a comprehensive prompt that can guide AI to perform this exact transformation
+6. Include concrete examples showing input format → output format
+
+FOCUS ON: Creating precise, actionable transformation guidelines that will allow AI to convert any similar SAMPLE file into the TEMPLATE format while preserving data integrity.`;
+        } else if (hasMultipleFiles && context.uploadedFiles) {
+          // Multiple files: analyze differences and create transformation requirements
+          basePrompt += `
+
+This is for MULTI-FILE ANALYSIS AND TRANSFORMATION REQUIREMENTS GENERATION.
+You have received ${context.uploadedFiles.length} files for comparison and transformation.
+
+FILES RECEIVED:
+${context.uploadedFiles.map((file, index) => `
+File ${index + 1}: ${file.name} (${file.format.toUpperCase()})
+${file.structuredData ? 'Contains structured data with ' + file.structuredData.metadata?.totalRows + ' rows and ' + file.structuredData.metadata?.totalColumns + ' columns' : 'Text content: ' + file.content.substring(0, 200) + '...'}
+`).join('')}
+
+ANALYSIS REQUIREMENTS:
+1. Compare the structure and format of all uploaded files
+2. Identify the source format (typically the first file) and target format (typically the second file)
+3. Analyze data organization patterns (vertical lists vs horizontal timelines, column headers, data types)
+4. Generate detailed transformation requirements that explain:
+   - How to convert from source structure to target structure
+   - What data mappings are needed
+   - How to preserve information while changing layout
+   - Specific formatting and organization rules
+5. Create a comprehensive prompt that can guide AI to perform this transformation
+6. Include examples of input/output format expectations
+
+FOCUS ON: Creating clear, actionable transformation guidelines that preserve data integrity while achieving the desired output format.`;
+        } else if (isWBSTransformation) {
+          basePrompt += `
+
+This is for WBS FORMAT TRANSFORMATION. You have received a WBS file in LIST FORMAT and need to transform it into TIMELINE/GANTT FORMAT.
+
+TRANSFORMATION REQUIREMENTS:
+1. Convert the vertical list structure (작업별 상세정보) to horizontal timeline structure (월별/주별 간트차트)
+2. Input format: 구분, 마일스톤, 작업명, 시작일, 종료일, 기간, 비고
+3. Output format: Timeline with months (3월~9월) and weeks (1W~4W) as columns
+4. Map each task to appropriate time slots based on 시작일/종료일
+5. Group tasks by 구분 and 마일스톤 in rows
+6. Generate Excel-compatible format with proper cell alignment
+7. Include visual indicators for task duration and dependencies
+8. Preserve all original task information while restructuring the layout
+
+EXAMPLE OUTPUT STRUCTURE:
+Row 1: [구분, 3월, "", "", "", 4월, "", "", "", 5월, ...]
+Row 2: ["", 1W, 2W, 3W, 4W, 1W, 2W, 3W, 4W, 1W, ...]
+Row 3+: [마일스톤/작업명, timeline cells with task indicators]`;
+        } else {
+          basePrompt += `
 
 This is for PROJECT WBS (Work Breakdown Structure) creation. The prompt should:
-1. Request hierarchical work breakdown structure
+1. Request hierarchical work breakdown structure in table format
 2. Include clear task descriptions and deliverables
 3. Ask for timeline estimates and dependencies
 4. Request resource allocation and responsibility assignments
 5. Include risk assessment and quality checkpoints
-6. Ask for measurable completion criteria for each task`;
+6. Ask for measurable completion criteria for each task
+7. Generate output in multiple formats: Excel-compatible table, Markdown, and structured JSON
+8. Consider the uploaded template structure if provided`;
+        }
       }
 
       const systemPrompt = basePrompt + `
