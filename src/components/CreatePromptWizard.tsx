@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Edit3,
   Check,
+  X,
 } from "lucide-react";
 import {
   companyDocumentStyles,
@@ -39,6 +40,7 @@ interface UploadedFile {
   format: SupportedUploadType;
   warnings: string[];
   imageData?: string;
+  structuredData?: any; // WBS data for Excel files
 }
 
 export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
@@ -52,9 +54,14 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
   // Step 2: Desired Output
   const [outputMethod, setOutputMethod] = useState("");
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [sampleFile, setSampleFile] = useState<UploadedFile | null>(null);
+  const [templateFile, setTemplateFile] = useState<UploadedFile | null>(null);
   const [predefinedFormat, setPredefinedFormat] = useState("");
   const [documentStyle, setDocumentStyle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sampleFileInputRef = useRef<HTMLInputElement>(null);
+  const templateFileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
@@ -110,7 +117,7 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     });
     try {
       const parsed = await parseFileToText(file);
-      setUploadedFile({
+      const newFile: UploadedFile = {
         name: file.name,
         size: file.size,
         type: file.type,
@@ -118,6 +125,19 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
         format: parsed.type,
         warnings: parsed.warnings,
         imageData: parsed.imageData,
+        structuredData: parsed.structuredData,
+      };
+
+      // Support multiple files
+      setUploadedFiles(prev => {
+        const updatedFiles = [...prev, newFile];
+
+        // For backward compatibility, set the first file as uploadedFile
+        if (prev.length === 0) {
+          setUploadedFile(newFile);
+        }
+
+        return updatedFiles;
       });
       completeStep("step2");
       if (!openSections.includes("step3")) {
@@ -128,16 +148,158 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
       setUploadError(message);
-      setUploadedFile(null);
     } finally {
       setIsProcessingFile(false);
     }
+  };
+
+  // Process sample file
+  const processSampleFile = async (file: File) => {
+    console.log('🔍 [Sample File] Processing started:', file.name, file.type, file.size);
+    setIsProcessingFile(true);
+    setUploadError(null);
+    try {
+      console.log('📄 [Sample File] Parsing file...');
+      const parsed = await parseFileToText(file);
+      console.log('✅ [Sample File] Parse successful:', parsed);
+
+      const newFile: UploadedFile = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        content: parsed.text,
+        format: parsed.type,
+        warnings: parsed.warnings,
+        imageData: parsed.imageData,
+        structuredData: parsed.structuredData,
+      };
+      setSampleFile(newFile);
+      console.log('✅ [Sample File] Successfully processed');
+
+      // Check completion with the new file (since state update is async)
+      if (templateFile && newFile) {
+        console.log('🔄 [Sample File] Both files ready, triggering step completion');
+        completeStep("step2");
+        if (!openSections.includes("step3")) {
+          setOpenSections(prev => [...prev, "step3"]);
+        }
+        console.log('🚀 [Sample File] About to call loadAIQuestions');
+        loadAIQuestions();
+      }
+    } catch (error) {
+      console.error('❌ [Sample File] Processing error:', error);
+      const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
+      setUploadError(message);
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
+  // Process template file
+  const processTemplateFile = async (file: File) => {
+    console.log('🎯 [Template File] Processing started:', file.name, file.type, file.size);
+    setIsProcessingFile(true);
+    setUploadError(null);
+    try {
+      console.log('📄 [Template File] Parsing file...');
+      const parsed = await parseFileToText(file);
+      console.log('✅ [Template File] Parse successful:', parsed);
+
+      const newFile: UploadedFile = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        content: parsed.text,
+        format: parsed.type,
+        warnings: parsed.warnings,
+        imageData: parsed.imageData,
+        structuredData: parsed.structuredData,
+      };
+      setTemplateFile(newFile);
+      console.log('✅ [Template File] Successfully processed');
+
+      // Check completion with the new file (since state update is async)
+      if (sampleFile && newFile) {
+        console.log('🔄 [Template File] Both files ready, triggering step completion');
+        completeStep("step2");
+        if (!openSections.includes("step3")) {
+          setOpenSections(prev => [...prev, "step3"]);
+        }
+        console.log('🚀 [Template File] About to call loadAIQuestions');
+        loadAIQuestions();
+      }
+    } catch (error) {
+      console.error('❌ [Template File] Processing error:', error);
+      const message = error instanceof Error ? error.message : "파일을 처리하는 중 알 수 없는 오류가 발생했습니다.";
+      setUploadError(message);
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
+  // Check if step 2 should be completed
+  const checkStepCompletion = () => {
+    console.log('🔍 [Wizard] checkStepCompletion called');
+    console.log('📂 [Wizard] Sample file exists:', !!sampleFile, sampleFile?.name);
+    console.log('📂 [Wizard] Template file exists:', !!templateFile, templateFile?.name);
+    console.log('📋 [Wizard] Current purpose:', purpose);
+    console.log('🎯 [Wizard] Current outputMethod:', outputMethod);
+
+    if (sampleFile && templateFile) {
+      console.log('✅ [Wizard] Both files present, completing step 2');
+      completeStep("step2");
+      if (!openSections.includes("step3")) {
+        setOpenSections(prev => [...prev, "step3"]);
+      }
+      console.log('🚀 [Wizard] About to call loadAIQuestions');
+      loadAIQuestions();
+    } else {
+      console.log('⏸️ [Wizard] Not both files present, skipping step completion');
+    }
+  };
+
+  // Remove file from the list
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => {
+      const newFiles = prev.filter((_, i) => i !== index);
+
+      // Update uploadedFile for backward compatibility
+      if (index === 0) {
+        setUploadedFile(newFiles.length > 0 ? newFiles[0] : null);
+      }
+
+      if (newFiles.length === 0) {
+        setCompletedSteps(prev => {
+          const newSet = new Set(prev);
+          newSet.delete("step2");
+          return newSet;
+        });
+      }
+
+      return newFiles;
+    });
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       void processFile(file);
+      event.target.value = "";
+    }
+  };
+
+  const handleSampleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      void processSampleFile(file);
+      event.target.value = "";
+    }
+  };
+
+  const handleTemplateFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      void processTemplateFile(file);
       event.target.value = "";
     }
   };
@@ -205,11 +367,18 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
 
   // Load AI-generated questions when step 2 is completed
   const loadAIQuestions = async () => {
-    if (!purpose.trim() || !outputMethod) return;
-
-    console.log('🚀 [Wizard] Loading AI questions...');
+    console.log('🚀 [Wizard] loadAIQuestions called');
     console.log('📋 [Wizard] Purpose:', purpose);
     console.log('🎯 [Wizard] Output method:', outputMethod);
+    console.log('📂 [Wizard] Sample file:', sampleFile?.name);
+    console.log('📂 [Wizard] Template file:', templateFile?.name);
+
+    if (!purpose.trim() || !outputMethod) {
+      console.log('⏸️ [Wizard] Skipping AI questions - missing purpose or outputMethod');
+      return;
+    }
+
+    console.log('🚀 [Wizard] Loading AI questions...');
 
     setIsLoadingQuestions(true);
     try {
@@ -278,7 +447,11 @@ export function CreatePromptWizard({ onNavigate }: CreatePromptWizardProps) {
         purpose,
         outputMethod: outputMethod as 'upload' | 'predefined' | 'company' | '',
         outputDetails,
-        userResponses: aiResponses
+        userResponses: aiResponses,
+        uploadedFile: sampleFile || uploadedFile,
+        uploadedFiles: sampleFile && templateFile ? [sampleFile, templateFile] : uploadedFiles,
+        sampleFile,
+        templateFile
       };
 
       console.log('📊 [Wizard] Prompt context:', context);
@@ -476,40 +649,182 @@ ${aiResponses
 
                 {/* Upload File Option */}
                 {outputMethod === "upload" && (
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleFileUpload}
-                      accept={[...uploadAccepts.extensions, ...uploadAccepts.mimeTypes].join(",")}
-                      className="hidden"
-                    />
-                    {!uploadedFile ? (
-                      <div
-                        className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          샘플 파일을 끌어다 놓거나 클릭해서 업로드하세요.
+                  <div className="space-y-6">
+                    {/* Sample File Upload */}
+                    <div>
+                      <Label className="mb-3 block">📄 샘플 파일 업로드</Label>
+                      <p className="text-sm text-muted-foreground mb-3">변환하고 싶은 원본 파일을 업로드하세요 (예: WBS_SAMPLE_2025.xlsx)</p>
+
+                      <input
+                        ref={sampleFileInputRef}
+                        type="file"
+                        onChange={handleSampleFileUpload}
+                        accept={[...uploadAccepts.extensions, ...uploadAccepts.mimeTypes].join(",")}
+                        className="hidden"
+                      />
+
+                      {!sampleFile ? (
+                        <div
+                          className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                          onClick={() => sampleFileInputRef.current?.click()}
+                        >
+                          <Upload className="h-5 w-5 mx-auto mb-2 text-blue-500" />
+                          <p className="text-sm text-blue-600">샘플 파일을 클릭해서 업로드하세요</p>
+                          <p className="text-xs text-muted-foreground mt-1">지원 형식: .xlsx, .pdf, .doc, .txt 등</p>
+                        </div>
+                      ) : (
+                        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-4 w-4 text-blue-500" />
+                              <div>
+                                <p className="text-sm font-medium">{sampleFile.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {(sampleFile.size / 1024).toFixed(1)} KB · {sampleFile.format.toUpperCase()}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setSampleFile(null)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          {sampleFile.warnings.length > 0 && (
+                            <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                              {sampleFile.warnings.map((warning, index) => (
+                                <p key={index}>{warning}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Template File Upload */}
+                    <div>
+                      <Label className="mb-3 block">🎯 템플릿 파일 업로드</Label>
+                      <p className="text-sm text-muted-foreground mb-3">목표 형태의 템플릿 파일을 업로드하세요 (예: wbs_template.xlsx)</p>
+
+                      <input
+                        ref={templateFileInputRef}
+                        type="file"
+                        onChange={handleTemplateFileUpload}
+                        accept={[...uploadAccepts.extensions, ...uploadAccepts.mimeTypes].join(",")}
+                        className="hidden"
+                      />
+
+                      {!templateFile ? (
+                        <div
+                          className="border-2 border-dashed border-green-300 rounded-lg p-4 text-center cursor-pointer hover:border-green-500 transition-colors"
+                          onClick={() => templateFileInputRef.current?.click()}
+                        >
+                          <Upload className="h-5 w-5 mx-auto mb-2 text-green-500" />
+                          <p className="text-sm text-green-600">템플릿 파일을 클릭해서 업로드하세요</p>
+                          <p className="text-xs text-muted-foreground mt-1">지원 형식: .xlsx, .pdf, .doc, .txt 등</p>
+                        </div>
+                      ) : (
+                        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-4 w-4 text-green-500" />
+                              <div>
+                                <p className="text-sm font-medium">{templateFile.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {(templateFile.size / 1024).toFixed(1)} KB · {templateFile.format.toUpperCase()}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setTemplateFile(null)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          {templateFile.warnings.length > 0 && (
+                            <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                              {templateFile.warnings.map((warning, index) => (
+                                <p key={index}>{warning}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Processing Status */}
+                    {isProcessingFile && (
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground" aria-live="polite">
+                          파일을 처리하는 중입니다...
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          지원 형식: .txt, .doc, .docx, .pdf
-                        </p>
-                        {isProcessingFile && (
-                          <p className="text-xs text-muted-foreground mt-3" aria-live="polite">
-                            파일을 처리하는 중입니다...
-                          </p>
-                        )}
-                        {uploadError && (
-                          <p className="text-xs text-red-500 mt-3" role="alert">
-                            {uploadError}
-                          </p>
-                        )}
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Error Display */}
+                    {uploadError && (
+                      <div className="text-center">
+                        <p className="text-sm text-red-500" role="alert">
+                          {uploadError}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Completion Status */}
+                    {sampleFile && templateFile && (
+                      <div className="bg-muted rounded-lg p-4 text-center">
+                        <Check className="h-5 w-5 mx-auto mb-2 text-green-500" />
+                        <p className="text-sm text-green-600 font-medium">
+                          두 파일이 모두 업로드되었습니다! AI가 변환 요구사항을 분석합니다.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Display uploaded files */}
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <h4 className="text-sm text-muted-foreground">업로드된 파일 ({uploadedFiles.length}개)</h4>
+                        {uploadedFiles.map((file, index) => (
+                          <div key={`${file.name}-${index}`} className="bg-muted rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <p className="text-sm">{file.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {(file.size / 1024).toFixed(1)} KB · {file.format.toUpperCase()}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeFile(index)}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            {file.warnings.length > 0 && (
+                              <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                                {file.warnings.map((warning, wIndex) => (
+                                  <p key={wIndex}>{warning}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Legacy single file display - hidden but maintained for compatibility */}
+                    {false && uploadedFile && (
                       <div className="bg-muted rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">

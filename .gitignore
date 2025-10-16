@@ -68,3 +68,6 @@ deploy.sh
 *.avi
 *.mov
 *.mkv
+
+# Test files
+#test-files/

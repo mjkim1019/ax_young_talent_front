@@ -52,11 +52,12 @@ export const uploadAccepts = {
     "text/plain",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/pdf",
     "image/jpeg",
     "image/png",
     "image/gif",
     "image/webp"
   ],
-  extensions: [".txt", ".doc", ".docx", ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp"],
+  extensions: [".txt", ".doc", ".docx", ".xlsx", ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp"],
 };
