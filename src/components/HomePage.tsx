@@ -20,7 +20,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl mb-2">안녕하세요, Alex님</h1>
+              <h1 className="text-3xl mb-2">안녕하세요, SK AX님</h1>
               <p className="text-muted-foreground text-lg">
                 AI와 함께 강력한 프롬프트를 만들거나 팀 템플릿을 살펴보세요.
               </p>

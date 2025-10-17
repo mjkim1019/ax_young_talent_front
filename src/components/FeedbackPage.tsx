@@ -7,6 +7,7 @@ import { Separator } from "./ui/separator";
 import { ArrowLeft, MessageSquare, Edit3, Check, X, Plus } from "lucide-react";
 import { feedbackSampleOutput } from "../../lib/mock/feedback";
 import type { TemplateSummary } from "../../lib/mock/templates";
+import { templateExampleOutputs } from "../../lib/mock/templates";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface FeedbackPageProps {
@@ -44,8 +45,16 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
   const [newComment, setNewComment] = useState("");
   const [showCommentForm, setShowCommentForm] = useState(false);
 
-  // Use actual AI result if available, otherwise fall back to sample
-  const aiOutput = data.aiResult || feedbackSampleOutput;
+  // Use actual AI result if available, otherwise use template-specific example output
+  const getDefaultOutput = () => {
+    if (data.template) {
+      const templateExample = templateExampleOutputs.find(output => output.id === data.template!.id);
+      return templateExample?.preview || feedbackSampleOutput;
+    }
+    return feedbackSampleOutput;
+  };
+
+  const aiOutput = data.aiResult || getDefaultOutput();
 
   const handleTextSelection = (type: 'prompt' | 'output') => {
     const selection = window.getSelection();

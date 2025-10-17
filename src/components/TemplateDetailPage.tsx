@@ -100,7 +100,9 @@ export function TemplateDetailPage({ template, onNavigate }: TemplateDetailPageP
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {templateExampleOutputs.map((output: TemplateExampleOutput) => (
+                {templateExampleOutputs
+                  .filter((output: TemplateExampleOutput) => output.id === template.id)
+                  .map((output: TemplateExampleOutput) => (
                   <Collapsible key={output.id}>
                     <CollapsibleTrigger
                       className="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-muted/50 transition-colors"
