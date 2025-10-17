@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import { ArrowLeft, MessageSquare, Edit3, Check, X, Plus } from "lucide-react";
+import { ArrowLeft, MessageSquare, Edit3, Check, X, Plus, Play, Loader2 } from "lucide-react";
 import { feedbackSampleOutput } from "../../lib/mock/feedback";
 import type { TemplateSummary } from "../../lib/mock/templates";
 import { templateExampleOutputs } from "../../lib/mock/templates";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { promptMateAI } from "../../lib/ai/openai-client";
 
 interface FeedbackPageProps {
   data: {
@@ -39,6 +40,9 @@ interface Comment {
 
 export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
   const [editablePrompt, setEditablePrompt] = useState(data.prompt);
+  const [isEditingPrompt, setIsEditingPrompt] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [generalFeedback, setGeneralFeedback] = useState("");
   const [selectedText, setSelectedText] = useState<{ start: number; end: number; type: 'prompt' | 'output' } | null>(null);
@@ -54,7 +58,26 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
     return feedbackSampleOutput;
   };
 
-  const aiOutput = data.aiResult || getDefaultOutput();
+  const aiOutput = executionResult || data.aiResult || getDefaultOutput();
+
+  // 프롬프트 실행 핸들러
+  const handleExecutePrompt = async () => {
+    console.log('🔘 [Feedback] Button clicked!');
+    console.log('🔘 [Feedback] isExecuting before:', isExecuting);
+    setIsExecuting(true);
+    try {
+      console.log('🚀 [Feedback] Executing prompt:', editablePrompt);
+      const result = await promptMateAI.executePrompt(editablePrompt);
+      console.log('✅ [Feedback] Execution result:', result);
+      setExecutionResult(result.text);
+    } catch (error) {
+      console.error('❌ [Feedback] Execution error:', error);
+      setExecutionResult('프롬프트 실행 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsExecuting(false);
+      console.log('🔘 [Feedback] isExecuting after:', false);
+    }
+  };
 
   const handleTextSelection = (type: 'prompt' | 'output') => {
     const selection = window.getSelection();
@@ -173,19 +196,63 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>프롬프트</CardTitle>
-                  <Button size="sm" variant="outline">
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    편집
-                  </Button>
+                  {!isEditingPrompt ? (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={handleExecutePrompt}
+                        disabled={isExecuting}
+                      >
+                        {isExecuting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            실행 중...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            실행
+                          </>
+                        )}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setIsEditingPrompt(true)}>
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        편집
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setEditablePrompt(data.prompt);
+                        setIsEditingPrompt(false);
+                      }}>
+                        <X className="h-4 w-4 mr-2" />
+                        취소
+                      </Button>
+                      <Button size="sm" onClick={() => setIsEditingPrompt(false)}>
+                        <Check className="h-4 w-4 mr-2" />
+                        저장
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <CardDescription>
-                  주석을 추가하려면 텍스트를 드래그해 선택하세요.
+                  {isEditingPrompt ? "프롬프트를 수정하세요." : "주석을 추가하려면 텍스트를 드래그해 선택하세요."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted rounded-lg p-4 text-sm max-h-96 overflow-y-auto">
-                  {renderTextWithComments(editablePrompt, 'prompt')}
-                </div>
+                {isEditingPrompt ? (
+                  <Textarea
+                    value={editablePrompt}
+                    onChange={(e) => setEditablePrompt(e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
+                  />
+                ) : (
+                  <div className="bg-muted rounded-lg p-4 text-sm max-h-96 overflow-y-auto">
+                    {renderTextWithComments(editablePrompt, 'prompt')}
+                  </div>
+                )}
                 
                 {/* Prompt Comments */}
                 {comments.filter(c => c.type === 'prompt').length > 0 && (
@@ -302,12 +369,17 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle>AI 생성 결과</CardTitle>
                   <div className="flex gap-2">
-                    {data.aiResult && (
+                    {executionResult && (
+                      <Badge variant="default" className="text-xs">
+                        실행 결과
+                      </Badge>
+                    )}
+                    {!executionResult && data.aiResult && (
                       <Badge variant="default" className="text-xs">
                         실시간 AI 응답
                       </Badge>
                     )}
-                    {!data.aiResult && (
+                    {!executionResult && !data.aiResult && (
                       <Badge variant="secondary" className="text-xs">
                         샘플 데이터
                       </Badge>

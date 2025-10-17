@@ -450,7 +450,8 @@ Return only the improved prompt in Korean.`;
    */
   async executePrompt(prompt: string, imageData?: string): Promise<{ text: string; imageUrl?: string }> {
     console.log('🤖 [AI] executePrompt called with:', { promptLength: prompt.length, hasImage: !!imageData });
-    
+    console.log('🤖 [AI] Current status - isEnabled:', this.isEnabled, 'hasClient:', !!this.client);
+
     const wbsResultContent = `| 구분 | 마일스톤 | 작업명 | 3월 1W | 3월 2W | 3월 3W | 3월 4W | 4월 1W | 4월 2W | 4월 3W | 4월 4W | 5월 1W | 5월 2W | 5월 3W | 5월 4W | 6월 1W | 6월 2W | 6월 3W | 6월 4W | 7월 1W | 7월 2W | 7월 3W | 7월 4W | 8월 1W | 8월 2W | 8월 3W | 8월 4W | 9월 1W | 9월 2W | 9월 3W | 9월 4W | 비고 |
 |--- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---|
 | SWING | 분석 | 신규 요건 분석 |  | ■ | ■ | ■ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Kick Off meeting 이후 |
@@ -483,14 +484,55 @@ Return only the improved prompt in Korean.`;
 | 외부 연동 | 통합테스트 및 이행 | 이행 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | ■ | ■ |  |  |  |  |  |  |
 | 외부 연동 | 안정화 | 안정화 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | ■ | ■ | ■ | ■ |  |  |  |`;
 
-    console.log('🤖 [AI] Using mock execution.');
+    // AI가 비활성화된 경우 Mock 데이터 반환
+    if (!this.isEnabled || !this.client) {
+      console.log('🤖 [AI] Using mock execution - AI not enabled or client missing');
 
-    if (prompt.toLowerCase().includes('wbs')) {
-      console.log('🤖 [AI] "wbs" detected in prompt, returning WBS mock data.');
-      return { text: wbsResultContent };
+      if (prompt.toLowerCase().includes('wbs')) {
+        console.log('🤖 [AI] "wbs" detected in prompt, returning WBS mock data.');
+        return { text: wbsResultContent };
+      }
+
+      return { text: this.getMockExecution(prompt) };
     }
 
-    return { text: this.getMockExecution(prompt) };
+    // AI가 활성화된 경우 실제 API 호출
+    try {
+      console.log('🚀 [AI] Executing prompt with OpenAI...');
+
+      let textResult: string;
+      let imageUrl: string | undefined;
+
+      // 이미지가 있으면 Vision 모델 사용
+      if (imageData) {
+        console.log('📸 [AI] Image data detected, using Vision model');
+        textResult = await this.generateTextWithVision(prompt, imageData);
+      } else {
+        console.log('📝 [AI] Generating text-only response');
+        textResult = await this.generateTextOnly(prompt);
+      }
+
+      // 프롬프트에 이미지 생성 요청이 있으면 DALL-E 사용
+      if (prompt.toLowerCase().includes('이미지') ||
+          prompt.toLowerCase().includes('그림') ||
+          prompt.toLowerCase().includes('image')) {
+        console.log('🎨 [AI] Image generation detected in prompt');
+        imageUrl = await this.generateImage(prompt);
+      }
+
+      console.log('✅ [AI] Execution complete');
+      return { text: textResult, imageUrl };
+
+    } catch (error) {
+      console.error('❌ [AI] Execution error:', error);
+      console.log('🔄 [AI] Falling back to mock execution');
+
+      if (prompt.toLowerCase().includes('wbs')) {
+        return { text: wbsResultContent };
+      }
+
+      return { text: this.getMockExecution(prompt) };
+    }
   }
 
   /**
