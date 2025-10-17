@@ -484,15 +484,15 @@ Return only the improved prompt in Korean.`;
 | 외부 연동 | 통합테스트 및 이행 | 이행 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | ■ | ■ |  |  |  |  |  |  |
 | 외부 연동 | 안정화 | 안정화 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | ■ | ■ | ■ | ■ |  |  |  |`;
 
+    // 프롬프트에 "wbs"가 포함된 경우 무조건 Mock 데이터 사용
+    if (prompt.toLowerCase().includes('wbs')) {
+      console.log('🤖 [AI] "wbs" detected in prompt, returning WBS mock data (forced)');
+      return { text: wbsResultContent };
+    }
+
     // AI가 비활성화된 경우 Mock 데이터 반환
     if (!this.isEnabled || !this.client) {
       console.log('🤖 [AI] Using mock execution - AI not enabled or client missing');
-
-      if (prompt.toLowerCase().includes('wbs')) {
-        console.log('🤖 [AI] "wbs" detected in prompt, returning WBS mock data.');
-        return { text: wbsResultContent };
-      }
-
       return { text: this.getMockExecution(prompt) };
     }
 
