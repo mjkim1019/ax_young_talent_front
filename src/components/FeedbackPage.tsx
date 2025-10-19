@@ -3,12 +3,10 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
 import { ArrowLeft, MessageSquare, Edit3, Check, X, Plus, Play, Loader2 } from "lucide-react";
 import { feedbackSampleOutput } from "../../lib/mock/feedback";
 import type { TemplateSummary } from "../../lib/mock/templates";
 import { templateExampleOutputs } from "../../lib/mock/templates";
-import { MarkdownRenderer } from "./MarkdownRenderer";
 import { promptMateAI } from "../../lib/ai/openai-client";
 
 interface FeedbackPageProps {
@@ -60,14 +58,42 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
 
   const aiOutput = executionResult || data.aiResult || getDefaultOutput();
 
+  const buildPromptWithOutputComments = () => {
+    const outputComments = comments.filter(comment => comment.type === 'output' && comment.text.trim());
+
+    if (outputComments.length === 0) {
+      return editablePrompt;
+    }
+
+    const feedbackLines = outputComments.map((comment, index) => {
+      const snippet = aiOutput.slice(comment.position.start, comment.position.end).trim();
+      const label = snippet ? `"${snippet}"` : `코멘트 ${index + 1}`;
+      return `- ${label}: ${comment.text.trim()}`;
+    });
+
+    return `${editablePrompt}\n\n[출력물 개선 피드백]\n${feedbackLines.join('\n')}`;
+  };
+
+  const getSelectionOffsets = (container: HTMLElement, range: Range) => {
+    const preSelectionRange = range.cloneRange();
+    preSelectionRange.selectNodeContents(container);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    const start = preSelectionRange.toString().length;
+    const selectionLength = range.toString().length;
+    const end = start + selectionLength;
+
+    return { start, end };
+  };
+
   // 프롬프트 실행 핸들러
   const handleExecutePrompt = async () => {
     console.log('🔘 [Feedback] Button clicked!');
     console.log('🔘 [Feedback] isExecuting before:', isExecuting);
     setIsExecuting(true);
     try {
-      console.log('🚀 [Feedback] Executing prompt:', editablePrompt);
-      const result = await promptMateAI.executePrompt(editablePrompt);
+      const promptForExecution = buildPromptWithOutputComments();
+      console.log('🚀 [Feedback] Executing prompt:', promptForExecution);
+      const result = await promptMateAI.executePrompt(promptForExecution, data.uploadedFile?.imageData);
       console.log('✅ [Feedback] Execution result:', result);
       setExecutionResult(result.text);
     } catch (error) {
@@ -83,13 +109,25 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
       const range = selection.getRangeAt(0);
-      const container = range.commonAncestorContainer.parentElement;
-      
-      if (container && container.getAttribute('data-content') === type) {
-        const start = range.startOffset;
-        const end = range.endOffset;
-        setSelectedText({ start, end, type });
-        setShowCommentForm(true);
+      let container: HTMLElement | null;
+
+      if (range.commonAncestorContainer instanceof HTMLElement) {
+        container = range.commonAncestorContainer;
+      } else {
+        container = range.commonAncestorContainer.parentElement;
+      }
+
+      while (container && container.getAttribute('data-content') !== type) {
+        container = container.parentElement;
+      }
+
+      if (container) {
+        const { start, end } = getSelectionOffsets(container, range);
+
+        if (end > start) {
+          setSelectedText({ start, end, type });
+          setShowCommentForm(true);
+        }
       }
     }
   };
@@ -398,7 +436,7 @@ export function FeedbackPage({ data, onNavigate }: FeedbackPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="bg-muted rounded-lg p-4 text-sm max-h-96 overflow-y-auto">
-                  <MarkdownRenderer content={aiOutput} />
+                  {renderTextWithComments(aiOutput, 'output')}
                 </div>
 
                 {/* AI Generated Image */}
